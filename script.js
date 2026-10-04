@@ -1,1363 +1,908 @@
-const CLASS_NAME = "X MP 2";
+const API = "/api";
 
-const STORAGE_KEY = "xmp2_students_v2";
-const GALLERY_KEY = "xmp2_gallery_v2";
-const VISITOR_KEY = "xmp2_visitor_name";
-const THEME_KEY = "xmp2_theme";
+let currentUser = null;
 
+const $ = (selector) => document.querySelector(selector);
 
-// =====================================
-// DATA DEFAULT
-// =====================================
-
-const defaultStudents = [
-    {
-        nama: "Nama Ketua",
-        jabatan: "Ketua Kelas",
-        kelas: CLASS_NAME,
-        foto: "foto/siswa1.jpg"
-    },
-    {
-        nama: "Nama Wakil",
-        jabatan: "Wakil Ketua",
-        kelas: CLASS_NAME,
-        foto: "foto/siswa2.jpg"
-    },
-    {
-        nama: "Nama Sekretaris",
-        jabatan: "Sekretaris",
-        kelas: CLASS_NAME,
-        foto: "foto/siswa3.jpg"
-    },
-    {
-        nama: "Nama Bendahara",
-        jabatan: "Bendahara",
-        kelas: CLASS_NAME,
-        foto: "foto/siswa4.jpg"
-    },
-    {
-        nama: "Nama Siswa 5",
-        jabatan: "Siswa",
-        kelas: CLASS_NAME,
-        foto: "foto/siswa5.jpg"
-    },
-    {
-        nama: "Nama Siswa 6",
-        jabatan: "Siswa",
-        kelas: CLASS_NAME,
-        foto: "foto/siswa6.jpg"
-    },
-    {
-        nama: "Nama Siswa 7",
-        jabatan: "Siswa",
-        kelas: CLASS_NAME,
-        foto: "foto/siswa7.jpg"
-    },
-    {
-        nama: "Nama Siswa 8",
-        jabatan: "Siswa",
-        kelas: CLASS_NAME,
-        foto: "foto/siswa8.jpg"
-    }
-];
-
-
-const defaultGallery = [
-    {
-        nama: "Foto Kelas",
-        foto: "foto/foto-kelas.jpg"
-    },
-    {
-        nama: "Galeri 1",
-        foto: "foto/galeri1.jpg"
-    },
-    {
-        nama: "Galeri 2",
-        foto: "foto/galeri2.jpg"
-    },
-    {
-        nama: "Galeri 3",
-        foto: "foto/galeri3.jpg"
-    }
-];
-
-
-// =====================================
-// ELEMENT
-// =====================================
-
-const nameModal =
-    document.getElementById("nameModal");
-
-const visitorNameInput =
-    document.getElementById("visitorNameInput");
-
-const enterWebsiteBtn =
-    document.getElementById("enterWebsiteBtn");
-
-const visitorName =
-    document.getElementById("visitorName");
-
-const dashboardVisitorName =
-    document.getElementById("dashboardVisitorName");
-
-const changeNameBtn =
-    document.getElementById("changeNameBtn");
-
-const themeBtn =
-    document.getElementById("themeBtn");
-
-const menuBtn =
-    document.getElementById("menuBtn");
-
-const sidebar =
-    document.getElementById("sidebar");
-
-const studentGrid =
-    document.getElementById("studentGrid");
-
-const structureGrid =
-    document.getElementById("structureGrid");
-
-const studentSearch =
-    document.getElementById("studentSearch");
-
-const totalStudents =
-    document.getElementById("totalStudents");
-
-const totalGallery =
-    document.getElementById("totalGallery");
-
-const galleryGrid =
-    document.getElementById("galleryGrid");
-
-const adminStudentList =
-    document.getElementById("adminStudentList");
-
-const adminGalleryList =
-    document.getElementById("adminGalleryList");
-
-const adminAddStudentBtn =
-    document.getElementById("adminAddStudentBtn");
-
-const galleryUpload =
-    document.getElementById("galleryUpload");
-
-const studentModal =
-    document.getElementById("studentModal");
-
-const closeStudentModal =
-    document.getElementById("closeStudentModal");
-
-const studentForm =
-    document.getElementById("studentForm");
-
-const studentModalTitle =
-    document.getElementById("studentModalTitle");
-
-const studentName =
-    document.getElementById("studentName");
-
-const studentPosition =
-    document.getElementById("studentPosition");
-
-const studentClass =
-    document.getElementById("studentClass");
-
-const studentPhotoFile =
-    document.getElementById("studentPhotoFile");
-
-const studentPreview =
-    document.getElementById("studentPreview");
-
-
-// =====================================
-// NAMA PENGUNJUNG
-// =====================================
-
-function loadVisitorName() {
-
-    const saved =
-        localStorage.getItem(VISITOR_KEY);
-
-    if (saved) {
-
-        showVisitorName(saved);
-
-        nameModal.classList.add("hidden");
-
-    } else {
-
-        nameModal.classList.remove("hidden");
-
-        setTimeout(() => {
-            visitorNameInput.focus();
-        }, 300);
-
-    }
+function escapeHTML(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
-
-function saveVisitorName() {
-
-    const name =
-        visitorNameInput.value.trim();
-
-    if (!name) {
-
-        visitorNameInput.focus();
-
-        visitorNameInput.placeholder =
-            "Nama wajib diisi!";
-
-        return;
-
+async function request(url, options = {}) {
+  const response = await fetch(API + url, {
+    credentials: "include",
+    ...options,
+    headers: {
+      ...(options.headers || {})
     }
+  });
 
-    localStorage.setItem(
-        VISITOR_KEY,
-        name
-    );
+  const data = await response.json().catch(() => ({}));
 
-    showVisitorName(name);
+  if (!response.ok) {
+    throw new Error(data.error || "Terjadi kesalahan.");
+  }
 
-    nameModal.classList.add("hidden");
-
-    visitorNameInput.value = "";
-
+  return data;
 }
 
+/* =========================
+   LOAD WEBSITE
+========================= */
 
-function showVisitorName(name) {
+async function loadWebsite() {
+  try {
+    const [
+      settings,
+      students,
+      gallery,
+      announcements,
+      agenda
+    ] = await Promise.all([
+      request("/settings"),
+      request("/students"),
+      request("/gallery"),
+      request("/announcements"),
+      request("/agenda")
+    ]);
 
-    visitorName.textContent = name;
+    $("#heroClassName").textContent =
+      settings.className || "X MP 2";
 
-    dashboardVisitorName.textContent =
-        name;
+    $("#heroFounder").textContent =
+      settings.founder || "NAZUAN AHMAD";
 
+    document.title =
+      `${settings.className || "X MP 2"} — ${settings.founder || "NAZUAN AHMAD"}`;
+
+    renderStudents(students);
+    renderGallery(gallery);
+    renderAnnouncements(announcements);
+    renderAgenda(agenda);
+
+    loadSettingsForm(settings);
+
+  } catch (error) {
+    console.error(error);
+  }
 }
 
+/* =========================
+   STUDENTS
+========================= */
 
-enterWebsiteBtn.addEventListener(
-    "click",
-    saveVisitorName
-);
+function renderStudents(students) {
 
+  $("#studentCount").textContent =
+    `${students.length} Siswa`;
 
-visitorNameInput.addEventListener(
-    "keydown",
-    event => {
+  if (!students.length) {
+    $("#studentList").innerHTML =
+      `<p class="empty">Belum ada siswa.</p>`;
+    return;
+  }
 
-        if (event.key === "Enter") {
-            saveVisitorName();
-        }
+  $("#studentList").innerHTML = students.map(student => {
 
+    const photo =
+      student.photo ||
+      "/uploads/default.jpg";
+
+    return `
+      <article class="student-card">
+
+        <img
+          src="${photo}"
+          alt="${escapeHTML(student.name)}"
+          onerror="this.src='https://placehold.co/500x500?text=No+Photo'"
+        >
+
+        <div class="student-info">
+
+          <h3>
+            ${escapeHTML(student.name)}
+          </h3>
+
+          <p>
+            ${escapeHTML(student.position || "Siswa")}
+          </p>
+
+        </div>
+
+      </article>
+    `;
+
+  }).join("");
+}
+
+/* =========================
+   GALLERY
+========================= */
+
+function renderGallery(gallery) {
+
+  if (!gallery.length) {
+    $("#galleryList").innerHTML =
+      `<p class="empty">Belum ada foto galeri.</p>`;
+    return;
+  }
+
+  $("#galleryList").innerHTML = gallery.map(item => `
+    <figure class="gallery-card">
+
+      <img
+        src="${item.url}"
+        alt="${escapeHTML(item.name)}"
+      >
+
+      <figcaption>
+        ${escapeHTML(item.name)}
+      </figcaption>
+
+    </figure>
+  `).join("");
+}
+
+/* =========================
+   ANNOUNCEMENT
+========================= */
+
+function renderAnnouncements(items) {
+
+  if (!items.length) {
+    $("#announcementList").innerHTML =
+      `<p class="empty">Belum ada pengumuman.</p>`;
+    return;
+  }
+
+  $("#announcementList").innerHTML = items.map(item => `
+    <article class="notice">
+
+      <h3>
+        ${escapeHTML(item.title)}
+      </h3>
+
+      <p>
+        ${escapeHTML(item.content)}
+      </p>
+
+    </article>
+  `).join("");
+}
+
+/* =========================
+   AGENDA
+========================= */
+
+function renderAgenda(items) {
+
+  if (!items.length) {
+    $("#agendaList").innerHTML =
+      `<p class="empty">Belum ada agenda.</p>`;
+    return;
+  }
+
+  $("#agendaList").innerHTML = items.map(item => {
+
+    const date = new Date(item.date);
+
+    return `
+      <article class="agenda-card">
+
+        <h3>
+          ${escapeHTML(item.title)}
+        </h3>
+
+        <p>
+          ${date.toLocaleString("id-ID")}
+        </p>
+
+        <p>
+          ${escapeHTML(item.description || "")}
+        </p>
+
+      </article>
+    `;
+
+  }).join("");
+}
+
+/* =========================
+   AUTH
+========================= */
+
+async function checkLogin() {
+
+  try {
+
+    currentUser = await request("/auth/me");
+
+    $("#adminDashboard")
+      .classList
+      .remove("hidden");
+
+    $("#loginButton").textContent =
+      currentUser.email;
+
+    $("#adminInfo").textContent =
+      `${currentUser.name || currentUser.email} · ${currentUser.role}`;
+
+    if (currentUser.role !== "owner") {
+      document
+        .querySelector('[data-tab="admins"]')
+        .classList.add("hidden");
     }
-);
 
+    await loadAdminData();
 
-changeNameBtn.addEventListener(
-    "click",
-    () => {
+  } catch {
 
-        visitorNameInput.value =
-            localStorage.getItem(VISITOR_KEY) || "";
+    currentUser = null;
 
-        nameModal.classList.remove("hidden");
-
-        setTimeout(() => {
-            visitorNameInput.focus();
-            visitorNameInput.select();
-        }, 100);
-
-    }
-);
-
-
-// =====================================
-// THEME
-// =====================================
-
-function loadTheme() {
-
-    if (
-        localStorage.getItem(THEME_KEY)
-        === "dark"
-    ) {
-
-        document.body.classList.add("dark");
-
-    }
+  }
 
 }
 
+$("#loginButton").onclick = () => {
 
-themeBtn.addEventListener(
-    "click",
-    () => {
+  window.location.href =
+    "/auth/google";
 
-        document.body.classList.toggle("dark");
+};
 
-        localStorage.setItem(
-            THEME_KEY,
-            document.body.classList.contains("dark")
-                ? "dark"
-                : "light"
-        );
+$("#logoutButton").onclick = async () => {
 
-    }
-);
+  try {
+    await request("/auth/logout", {
+      method: "POST"
+    });
+  } catch {}
 
+  location.reload();
 
-// =====================================
-// MOBILE MENU
-// =====================================
+};
 
-menuBtn.addEventListener(
-    "click",
-    () => {
-        sidebar.classList.toggle("open");
-    }
-);
+/* =========================
+   ADMIN TABS
+========================= */
 
+document.querySelectorAll("[data-tab]").forEach(button => {
 
-document.querySelectorAll(".nav-link")
-.forEach(link => {
+  button.addEventListener("click", () => {
 
-    link.addEventListener(
-        "click",
-        () => {
+    const tab = button.dataset.tab;
 
-            if (window.innerWidth <= 800) {
-                sidebar.classList.remove("open");
-            }
+    document
+      .querySelectorAll(".admin-tabs button")
+      .forEach(item =>
+        item.classList.remove("active")
+      );
 
-        }
-    );
+    button.classList.add("active");
+
+    document
+      .querySelectorAll(".admin-tab")
+      .forEach(panel =>
+        panel.classList.add("hidden")
+      );
+
+    $(`#tab-${tab}`)
+      .classList
+      .remove("hidden");
+
+  });
 
 });
 
+/* =========================
+   ADMIN DATA
+========================= */
 
-// =====================================
-// STUDENT STORAGE
-// =====================================
+async function loadAdminData() {
 
-function getStudents() {
+  const [
+    students,
+    gallery,
+    announcements,
+    agenda
+  ] = await Promise.all([
+    request("/students"),
+    request("/gallery"),
+    request("/announcements"),
+    request("/agenda")
+  ]);
 
-    const saved =
-        localStorage.getItem(STORAGE_KEY);
+  renderAdminStudents(students);
+  renderAdminGallery(gallery);
+  renderAdminAnnouncements(announcements);
+  renderAdminAgenda(agenda);
 
-    if (!saved) {
-        return defaultStudents;
-    }
-
-    try {
-        return JSON.parse(saved);
-    } catch {
-        return defaultStudents;
-    }
-
-}
-
-
-function saveStudents(students) {
-
-    localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(students)
-    );
+  if (currentUser?.role === "owner") {
+    loadAdmins();
+  }
 
 }
 
+/* =========================
+   ADD STUDENT
+========================= */
 
-// =====================================
-// GALLERY STORAGE
-// =====================================
+$("#studentForm").addEventListener("submit", async (event) => {
 
-function getGallery() {
+  event.preventDefault();
 
-    const saved =
-        localStorage.getItem(GALLERY_KEY);
+  const form = event.target;
+  const file = form.photo.files[0];
 
-    if (!saved) {
-        return defaultGallery;
+  try {
+
+    let photo = "";
+
+    if (file) {
+      const uploaded = await uploadFile(file);
+      photo = uploaded.url;
     }
 
-    try {
-        return JSON.parse(saved);
-    } catch {
-        return defaultGallery;
-    }
-
-}
-
-
-function saveGallery(gallery) {
-
-    localStorage.setItem(
-        GALLERY_KEY,
-        JSON.stringify(gallery)
-    );
-
-}
-
-
-// =====================================
-// RENDER SISWA
-// =====================================
-
-function renderStudents(
-    students = getStudents()
-) {
-
-    studentGrid.innerHTML = "";
-
-    totalStudents.textContent =
-        students.length;
-
-
-    if (!students.length) {
-
-        studentGrid.innerHTML = `
-            <div style="
-                grid-column:1/-1;
-                text-align:center;
-                padding:40px;
-                color:var(--muted);
-            ">
-                Belum ada data siswa.
-            </div>
-        `;
-
-        return;
-    }
-
-
-    students.forEach(student => {
-
-        const card =
-            document.createElement("div");
-
-        card.className =
-            "student-card";
-
-        card.innerHTML = `
-
-            <div class="student-photo">
-
-                <img
-                    src="${safe(student.foto)}"
-                    alt="${safe(student.nama)}"
-                    onerror="imageFallback(this, 'Siswa')"
-                >
-
-            </div>
-
-            <div class="student-info">
-
-                <h3>
-                    ${safe(student.nama)}
-                </h3>
-
-                <p>
-                    ${safe(student.jabatan)}
-                </p>
-
-                <small>
-                    ${safe(student.kelas)}
-                </small>
-
-            </div>
-        `;
-
-        studentGrid.appendChild(card);
-
+    await request("/students", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name: form.name.value,
+        position: form.position.value,
+        photo
+      })
     });
 
-}
+    form.reset();
 
+    await loadWebsite();
+    await loadAdminData();
 
-// =====================================
-// STRUKTUR
-// =====================================
+    alert("Siswa berhasil ditambahkan.");
 
-function renderStructure() {
+  } catch (error) {
 
-    const students =
-        getStudents();
+    alert(error.message);
 
-    const structure =
-        students.filter(student =>
-            [
-                "Ketua Kelas",
-                "Wakil Ketua",
-                "Sekretaris",
-                "Bendahara"
-            ].includes(student.jabatan)
-        );
+  }
 
+});
 
-    structureGrid.innerHTML = "";
+/* =========================
+   ADMIN STUDENTS
+========================= */
 
+function renderAdminStudents(students) {
 
-    if (!structure.length) {
+  if (!students.length) {
 
-        structureGrid.innerHTML = `
-            <div style="
-                grid-column:1/-1;
-                color:var(--muted);
-            ">
-                Struktur belum tersedia.
-            </div>
-        `;
+    $("#adminStudents").innerHTML =
+      `<p class="empty">Belum ada siswa.</p>`;
 
-        return;
-    }
+    return;
 
+  }
 
-    structure.forEach(
-        (student, index) => {
+  $("#adminStudents").innerHTML = students.map(student => `
+    <div class="admin-row">
 
-            const card =
-                document.createElement("div");
+      <div class="row-info">
 
-            card.className =
-                "structure-card";
+        <strong>
+          ${escapeHTML(student.name)}
+        </strong>
 
+        <span>
+          ${escapeHTML(student.position || "Siswa")}
+        </span>
 
-            card.innerHTML = `
+      </div>
 
-                <div class="structure-photo">
+      <button
+        class="small-danger"
+        onclick="deleteStudent(${student.id})"
+      >
+        Hapus
+      </button>
 
-                    <img
-                        src="${safe(student.foto)}"
-                        alt="${safe(student.nama)}"
-                        onerror="imageFallback(this, 'X')"
-                    >
-
-                </div>
-
-                <div>
-
-                    <span>
-                        ${String(index + 1).padStart(2,"0")}
-                    </span>
-
-                    <h3>
-                        ${safe(student.jabatan)}
-                    </h3>
-
-                    <p>
-                        ${safe(student.nama)}
-                    </p>
-
-                    <small>
-                        ${safe(student.kelas)}
-                    </small>
-
-                </div>
-            `;
-
-
-            structureGrid.appendChild(card);
-
-        }
-    );
+    </div>
+  `).join("");
 
 }
 
+async function deleteStudent(id) {
 
-// =====================================
-// ADMIN SISWA
-// =====================================
+  if (!confirm("Hapus siswa ini?")) {
+    return;
+  }
 
-function renderAdminStudents() {
+  try {
 
-    const students =
-        getStudents();
-
-    adminStudentList.innerHTML = "";
-
-
-    students.forEach(
-        (student, index) => {
-
-            const row =
-                document.createElement("div");
-
-            row.className =
-                "admin-student";
-
-
-            row.innerHTML = `
-
-                <div class="admin-student-photo">
-
-                    <img
-                        src="${safe(student.foto)}"
-                        alt="${safe(student.nama)}"
-                        onerror="imageFallback(this, 'Siswa')"
-                    >
-
-                </div>
-
-                <div class="admin-student-info">
-
-                    <strong>
-                        ${safe(student.nama)}
-                    </strong>
-
-                    <span>
-                        ${safe(student.jabatan)}
-                        • ${safe(student.kelas)}
-                    </span>
-
-                </div>
-
-                <div class="admin-actions">
-
-                    <button
-                        class="edit-btn"
-                        data-edit="${index}"
-                    >
-                        Edit
-                    </button>
-
-                    <button
-                        class="delete-btn"
-                        data-delete="${index}"
-                    >
-                        Hapus
-                    </button>
-
-                </div>
-            `;
-
-
-            adminStudentList.appendChild(row);
-
-        }
-    );
-
-
-    document.querySelectorAll(
-        "[data-edit]"
-    ).forEach(button => {
-
-        button.addEventListener(
-            "click",
-            () => {
-
-                openEditStudent(
-                    Number(button.dataset.edit)
-                );
-
-            }
-        );
-
+    await request(`/students/${id}`, {
+      method: "DELETE"
     });
 
+    await loadWebsite();
+    await loadAdminData();
 
-    document.querySelectorAll(
-        "[data-delete]"
-    ).forEach(button => {
+  } catch (error) {
 
-        button.addEventListener(
-            "click",
-            () => {
+    alert(error.message);
 
-                deleteStudent(
-                    Number(button.dataset.delete)
-                );
+  }
 
-            }
-        );
+}
 
+/* =========================
+   UPLOAD
+========================= */
+
+async function uploadFile(file) {
+
+  const formData = new FormData();
+
+  formData.append("photo", file);
+
+  return request("/uploads", {
+    method: "POST",
+    body: formData
+  });
+
+}
+
+$("#photoForm").addEventListener("submit", async (event) => {
+
+  event.preventDefault();
+
+  const form = event.target;
+  const file = form.photo.files[0];
+
+  if (!file) {
+    alert("Pilih foto terlebih dahulu.");
+    return;
+  }
+
+  try {
+
+    const uploaded = await uploadFile(file);
+
+    await request("/gallery", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name: form.name.value,
+        url: uploaded.url,
+        filename: uploaded.filename
+      })
     });
 
-}
+    form.reset();
 
+    await loadWebsite();
+    await loadAdminData();
 
-// =====================================
-// TAMBAH / EDIT SISWA
-// =====================================
+    alert("Foto berhasil diupload.");
 
-let editingStudentIndex = -1;
-let editingPhoto = "";
+  } catch (error) {
 
+    alert(error.message);
 
-adminAddStudentBtn.addEventListener(
-    "click",
-    () => {
+  }
 
-        editingStudentIndex = -1;
-        editingPhoto = "";
+});
 
-        studentModalTitle.textContent =
-            "Tambah Siswa";
+/* =========================
+   GALLERY ADMIN
+========================= */
 
-        studentForm.reset();
+function renderAdminGallery(items) {
 
-        studentPosition.value =
-            "Siswa";
+  if (!items.length) {
 
-        studentPreview.style.display =
-            "none";
+    $("#adminGallery").innerHTML =
+      `<p class="empty">Belum ada galeri.</p>`;
 
-        studentModal.classList.remove(
-            "hidden"
-        );
+    return;
 
-    }
-);
+  }
 
+  $("#adminGallery").innerHTML = items.map(item => `
+    <div class="admin-row">
 
-function openEditStudent(index) {
+      <div class="row-info">
 
-    const students =
-        getStudents();
+        <strong>
+          ${escapeHTML(item.name)}
+        </strong>
 
-    const student =
-        students[index];
+      </div>
 
-    if (!student) return;
+      <button
+        class="small-danger"
+        onclick="deleteGallery(${item.id})"
+      >
+        Hapus
+      </button>
 
-
-    editingStudentIndex =
-        index;
-
-    editingPhoto =
-        student.foto;
-
-
-    studentModalTitle.textContent =
-        "Edit Siswa";
-
-
-    studentName.value =
-        student.nama;
-
-    studentPosition.value =
-        student.jabatan;
-
-    studentClass.value =
-        student.kelas;
-
-
-    studentPreview.innerHTML = `
-        <img src="${safe(student.foto)}"
-             alt="Preview">
-    `;
-
-    studentPreview.style.display =
-        "block";
-
-
-    studentModal.classList.remove(
-        "hidden"
-    );
+    </div>
+  `).join("");
 
 }
 
+async function deleteGallery(id) {
 
-closeStudentModal.addEventListener(
-    "click",
-    () => {
+  if (!confirm("Hapus foto ini?")) {
+    return;
+  }
 
-        studentModal.classList.add(
-            "hidden"
-        );
+  try {
 
-    }
-);
-
-
-studentModal.addEventListener(
-    "click",
-    event => {
-
-        if (
-            event.target === studentModal
-        ) {
-
-            studentModal.classList.add(
-                "hidden"
-            );
-
-        }
-
-    }
-);
-
-
-// =====================================
-// PREVIEW FOTO SISWA
-// =====================================
-
-studentPhotoFile.addEventListener(
-    "change",
-    function() {
-
-        const file =
-            this.files[0];
-
-        if (!file) return;
-
-
-        if (!file.type.startsWith("image/")) {
-
-            alert(
-                "File harus berupa gambar."
-            );
-
-            this.value = "";
-
-            return;
-
-        }
-
-
-        const reader =
-            new FileReader();
-
-
-        reader.onload =
-            event => {
-
-                editingPhoto =
-                    event.target.result;
-
-                studentPreview.innerHTML = `
-                    <img
-                        src="${event.target.result}"
-                        alt="Preview"
-                    >
-                `;
-
-                studentPreview.style.display =
-                    "block";
-
-            };
-
-
-        reader.readAsDataURL(file);
-
-    }
-);
-
-
-// =====================================
-// SIMPAN SISWA
-// =====================================
-
-studentForm.addEventListener(
-    "submit",
-    event => {
-
-        event.preventDefault();
-
-
-        const nama =
-            studentName.value.trim();
-
-        const jabatan =
-            studentPosition.value.trim();
-
-        const kelas =
-            studentClass.value;
-
-
-        if (!nama) {
-
-            alert(
-                "Nama siswa wajib diisi."
-            );
-
-            return;
-
-        }
-
-
-        if (!editingPhoto) {
-
-            editingPhoto =
-                "foto/default.jpg";
-
-        }
-
-
-        const students =
-            getStudents();
-
-
-        const data = {
-
-            nama,
-            jabatan: jabatan || "Siswa",
-            kelas,
-            foto: editingPhoto
-
-        };
-
-
-        if (editingStudentIndex === -1) {
-
-            students.push(data);
-
-        } else {
-
-            students[editingStudentIndex] =
-                data;
-
-        }
-
-
-        saveStudents(students);
-
-
-        renderStudents();
-        renderStructure();
-        renderAdminStudents();
-
-
-        studentModal.classList.add(
-            "hidden"
-        );
-
-
-        editingStudentIndex = -1;
-        editingPhoto = "";
-
-    }
-);
-
-
-// =====================================
-// HAPUS SISWA
-// =====================================
-
-function deleteStudent(index) {
-
-    const students =
-        getStudents();
-
-
-    if (!confirm(
-        `Hapus siswa "${students[index].nama}"?`
-    )) {
-
-        return;
-
-    }
-
-
-    students.splice(index, 1);
-
-    saveStudents(students);
-
-
-    renderStudents();
-    renderStructure();
-    renderAdminStudents();
-
-}
-
-
-// =====================================
-// SEARCH
-// =====================================
-
-studentSearch.addEventListener(
-    "input",
-    function() {
-
-        const keyword =
-            this.value
-                .toLowerCase()
-                .trim();
-
-
-        const filtered =
-            getStudents().filter(
-                student =>
-
-                    student.nama
-                        .toLowerCase()
-                        .includes(keyword)
-
-                    ||
-
-                    student.jabatan
-                        .toLowerCase()
-                        .includes(keyword)
-            );
-
-
-        renderStudents(filtered);
-
-    }
-);
-
-
-// =====================================
-// GALERI
-// =====================================
-
-function renderGallery() {
-
-    const gallery =
-        getGallery();
-
-    galleryGrid.innerHTML = "";
-
-    totalGallery.textContent =
-        gallery.length;
-
-
-    gallery.forEach(photo => {
-
-        const item =
-            document.createElement("div");
-
-        item.className =
-            "gallery-item";
-
-
-        item.innerHTML = `
-            <img
-                src="${safe(photo.foto)}"
-                alt="${safe(photo.nama)}"
-                onerror="imageFallback(this, 'Gallery')"
-            >
-        `;
-
-
-        galleryGrid.appendChild(item);
-
+    await request(`/gallery/${id}`, {
+      method: "DELETE"
     });
 
+    await loadWebsite();
+    await loadAdminData();
+
+  } catch (error) {
+
+    alert(error.message);
+
+  }
+
 }
 
+/* =========================
+   ANNOUNCEMENT
+========================= */
 
-// =====================================
-// ADMIN GALERI
-// =====================================
+$("#announcementForm").addEventListener("submit", async (event) => {
 
-function renderAdminGallery() {
+  event.preventDefault();
 
-    const gallery =
-        getGallery();
+  const form = event.target;
 
-    adminGalleryList.innerHTML = "";
+  try {
 
+    await request("/announcements", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        title: form.title.value,
+        content: form.content.value
+      })
+    });
 
-    gallery.forEach(
-        (photo, index) => {
+    form.reset();
 
-            const item =
-                document.createElement("div");
+    await loadWebsite();
+    await loadAdminData();
 
-            item.className =
-                "admin-gallery-item";
+    alert("Pengumuman berhasil dibuat.");
 
+  } catch (error) {
 
-            item.innerHTML = `
+    alert(error.message);
 
-                <div class="admin-gallery-image">
+  }
 
-                    <img
-                        src="${safe(photo.foto)}"
-                        alt="${safe(photo.nama)}"
-                    >
+});
 
-                </div>
+function renderAdminAnnouncements(items) {
 
-                <div class="admin-gallery-name">
-                    ${safe(photo.nama)}
-                </div>
+  $("#adminAnnouncements").innerHTML =
+    items.map(item => `
+      <div class="admin-row">
 
+        <div class="row-info">
+          <strong>${escapeHTML(item.title)}</strong>
+        </div>
+
+        <button
+          class="small-danger"
+          onclick="deleteAnnouncement(${item.id})"
+        >
+          Hapus
+        </button>
+
+      </div>
+    `).join("");
+
+}
+
+async function deleteAnnouncement(id) {
+
+  if (!confirm("Hapus pengumuman?")) return;
+
+  try {
+
+    await request(`/announcements/${id}`, {
+      method: "DELETE"
+    });
+
+    await loadWebsite();
+    await loadAdminData();
+
+  } catch (error) {
+
+    alert(error.message);
+
+  }
+
+}
+
+/* =========================
+   AGENDA
+========================= */
+
+$("#agendaForm").addEventListener("submit", async (event) => {
+
+  event.preventDefault();
+
+  const form = event.target;
+
+  try {
+
+    await request("/agenda", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        title: form.title.value,
+        date: form.date.value,
+        description: form.description.value
+      })
+    });
+
+    form.reset();
+
+    await loadWebsite();
+    await loadAdminData();
+
+    alert("Agenda berhasil ditambahkan.");
+
+  } catch (error) {
+
+    alert(error.message);
+
+  }
+
+});
+
+function renderAdminAgenda(items) {
+
+  $("#adminAgenda").innerHTML =
+    items.map(item => `
+      <div class="admin-row">
+
+        <div class="row-info">
+
+          <strong>
+            ${escapeHTML(item.title)}
+          </strong>
+
+          <span>
+            ${escapeHTML(item.date)}
+          </span>
+
+        </div>
+
+        <button
+          class="small-danger"
+          onclick="deleteAgenda(${item.id})"
+        >
+          Hapus
+        </button>
+
+      </div>
+    `).join("");
+
+}
+
+async function deleteAgenda(id) {
+
+  if (!confirm("Hapus agenda?")) return;
+
+  try {
+
+    await request(`/agenda/${id}`, {
+      method: "DELETE"
+    });
+
+    await loadWebsite();
+    await loadAdminData();
+
+  } catch (error) {
+
+    alert(error.message);
+
+  }
+
+}
+
+/* =========================
+   SETTINGS
+========================= */
+
+function loadSettingsForm(settings) {
+
+  const form = $("#settingsForm");
+
+  form.className = "";
+
+  form.className = "settings-form";
+
+  form.className = "";
+
+  form.elements.className.value =
+    settings.className || "";
+
+  form.elements.founder.value =
+    settings.founder || "";
+
+  form.elements.instagram.value =
+    settings.instagram || "";
+
+}
+
+$("#settingsForm").addEventListener("submit", async (event) => {
+
+  event.preventDefault();
+
+  const form = event.target;
+
+  try {
+
+    await request("/settings", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        className: form.className.value,
+        founder: form.founder.value,
+        instagram: form.instagram.value
+      })
+    });
+
+    await loadWebsite();
+
+    alert("Pengaturan berhasil disimpan.");
+
+  } catch (error) {
+
+    alert(error.message);
+
+  }
+
+});
+
+/* =========================
+   ADMIN MANAGEMENT
+========================= */
+
+async function loadAdmins() {
+
+  if (currentUser?.role !== "owner") {
+    return;
+  }
+
+  try {
+
+    const admins = await request("/admins");
+
+    $("#adminList").innerHTML =
+      admins.map(admin => `
+        <div class="admin-row">
+
+          <div class="row-info">
+
+            <strong>
+              ${escapeHTML(admin.email)}
+            </strong>
+
+            <span>
+              Role: ${escapeHTML(admin.role)}
+            </span>
+
+          </div>
+
+          ${
+            admin.role !== "owner"
+              ? `
                 <button
-                    class="delete-btn"
-                    data-gallery-delete="${index}"
+                  class="small-danger"
+                  onclick="deleteAdmin(${admin.id})"
                 >
-                    Hapus Foto
+                  Hapus
                 </button>
-            `;
+              `
+              : ""
+          }
 
+        </div>
+      `).join("");
 
-            adminGalleryList.appendChild(item);
+  } catch (error) {
 
-        }
-    );
+    console.error(error);
 
+  }
 
-    document.querySelectorAll(
-        "[data-gallery-delete]"
-    ).forEach(button => {
+}
 
-        button.addEventListener(
-            "click",
-            () => {
+$("#adminForm").addEventListener("submit", async (event) => {
 
-                deleteGallery(
-                    Number(
-                        button.dataset.galleryDelete
-                    )
-                );
+  event.preventDefault();
 
-            }
-        );
+  const form = event.target;
 
+  try {
+
+    await request("/admins", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email: form.email.value,
+        role: form.role.value
+      })
     });
 
-}
+    form.reset();
 
+    await loadAdmins();
 
-// =====================================
-// UPLOAD GALERI
-// =====================================
-
-galleryUpload.addEventListener(
-    "change",
-    function() {
-
-        const files =
-            Array.from(this.files);
-
-
-        if (!files.length) return;
-
-
-        const gallery =
-            getGallery();
-
-
-        let completed = 0;
-
-
-        files.forEach(file => {
-
-            if (
-                !file.type.startsWith("image/")
-            ) {
-
-                completed++;
-
-                return;
-
-            }
-
-
-            const reader =
-                new FileReader();
-
-
-            reader.onload =
-                event => {
-
-                    gallery.push({
-
-                        nama:
-                            file.name,
-
-                        foto:
-                            event.target.result
-
-                    });
-
-
-                    completed++;
-
-
-                    if (
-                        completed === files.length
-                    ) {
-
-                        saveGallery(gallery);
-
-                        renderGallery();
-                        renderAdminGallery();
-
-                        galleryUpload.value = "";
-
-                    }
-
-                };
-
-
-            reader.readAsDataURL(file);
-
-        });
-
-    }
-);
-
-
-// =====================================
-// HAPUS GALERI
-// =====================================
-
-function deleteGallery(index) {
-
-    const gallery =
-        getGallery();
-
-
-    if (!confirm(
-        "Hapus foto galeri ini?"
-    )) {
-
-        return;
-
-    }
-
-
-    gallery.splice(index, 1);
-
-    saveGallery(gallery);
-
-
-    renderGallery();
-    renderAdminGallery();
-
-}
-
-
-// =====================================
-// ESCAPE HTML
-// =====================================
-
-function safe(value) {
-
-    return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-
-}
-
-
-// =====================================
-// IMAGE FALLBACK
-// =====================================
-
-function imageFallback(
-    image,
-    text = "X MP 2"
-) {
-
-    image.style.display =
-        "none";
-
-
-    const parent =
-        image.parentElement;
-
-
-    if (!parent) return;
-
-
-    parent.style.display =
-        "flex";
-
-    parent.style.alignItems =
-        "center";
-
-    parent.style.justifyContent =
-        "center";
-
-    parent.style.color =
-        "var(--muted)";
-
-    parent.style.fontWeight =
-        "bold";
-
-    parent.innerHTML =
-        `<span>${safe(text)}</span>`;
-
-}
-
-
-// =====================================
-// ACTIVE NAV
-// =====================================
-
-const sections =
-    document.querySelectorAll(
-        "section[id]"
+    alert(
+      "Gmail berhasil ditambahkan sebagai admin."
     );
 
-const navLinks =
-    document.querySelectorAll(
-        ".nav-link"
-    );
+  } catch (error) {
 
+    alert(error.message);
 
-window.addEventListener(
-    "scroll",
-    () => {
+  }
 
-        let current = "";
+});
 
+async function deleteAdmin(id) {
 
-        sections.forEach(section => {
+  if (!confirm("Hapus admin ini?")) {
+    return;
+  }
 
-            const top =
-                section.offsetTop - 130;
+  try {
 
+    await request(`/admins/${id}`, {
+      method: "DELETE"
+    });
 
-            if (
-                window.scrollY >= top
-            ) {
+    await loadAdmins();
 
-                current =
-                    section.id;
+  } catch (error) {
 
-            }
+    alert(error.message);
 
-        });
+  }
 
+}
 
-        navLinks.forEach(link => {
+/* =========================
+   START
+========================= */
 
-            link.classList.remove(
-                "active"
-            );
-
-
-            if (
-                link.getAttribute("href")
-                === "#" + current
-            ) {
-
-                link.classList.add(
-                    "active"
-                );
-
-            }
-
-        });
-
-    }
-);
-
-
-// =====================================
-// INIT
-// =====================================
-
-loadTheme();
-
-loadVisitorName();
-
-renderStudents();
-
-renderStructure();
-
-renderGallery();
-
-renderAdminStudents();
-
-renderAdminGallery();
+loadWebsite();
+checkLogin();
