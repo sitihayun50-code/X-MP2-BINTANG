@@ -1,21 +1,19 @@
 "use strict";
 
 /* =========================
-   BASIC HELPERS
+   HELPER
 ========================= */
 
 const $ = (selector) => document.querySelector(selector);
 
-const escapeHTML = (value) => {
-  if (value === null || value === undefined) return "";
-
-  return String(value)
+function escapeHTML(value) {
+  return String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
-};
+}
 
 async function api(url, options = {}) {
   const response = await fetch(url, {
@@ -23,32 +21,62 @@ async function api(url, options = {}) {
     ...options
   });
 
+  const text = await response.text();
+
   let data = {};
 
   try {
-    data = await response.json();
+    data = text ? JSON.parse(text) : {};
   } catch {
-    data = {};
+    throw new Error(
+      `Server mengembalikan data tidak valid (${response.status})`
+    );
   }
 
   if (!response.ok) {
-    throw new Error(data.error || `Request gagal (${response.status})`);
+    throw new Error(
+      data.error || `Request gagal (${response.status})`
+    );
   }
 
   return data;
 }
 
-function showToast(message) {
-  const toast = $("#toast");
+function toast(message) {
+  const el = $("#toast");
 
-  toast.textContent = message;
-  toast.classList.add("show");
+  if (!el) {
+    alert(message);
+    return;
+  }
 
-  clearTimeout(window.toastTimer);
+  el.textContent = message;
+  el.classList.add("show");
 
-  window.toastTimer = setTimeout(() => {
-    toast.classList.remove("show");
+  clearTimeout(window.__toastTimer);
+
+  window.__toastTimer = setTimeout(() => {
+    el.classList.remove("show");
   }, 3000);
+}
+
+function hideLoading(id) {
+  const el = $(id);
+  if (el) el.classList.add("hidden");
+}
+
+function showEmpty(id, message = "Belum ada data.") {
+  const el = $(id);
+
+  if (!el) return;
+
+  el.textContent = message;
+  el.classList.remove("hidden");
+}
+
+function hideEmpty(id) {
+  const el = $(id);
+  if (el) el.classList.add("hidden");
 }
 
 function formatDate(value) {
@@ -71,48 +99,78 @@ function formatDate(value) {
    MOBILE MENU
 ========================= */
 
-$("#menuBtn").addEventListener("click", () => {
-  $("#mainNav").classList.toggle("open");
-});
+const menuBtn = $("#menuBtn");
+const mainNav = $("#mainNav");
 
-document.querySelectorAll("#mainNav a").forEach((link) => {
-  link.addEventListener("click", () => {
-    $("#mainNav").classList.remove("open");
+if (menuBtn && mainNav) {
+  menuBtn.addEventListener("click", () => {
+    mainNav.classList.toggle("open");
   });
-});
+
+  mainNav.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", () => {
+      mainNav.classList.remove("open");
+    });
+  });
+}
 
 /* =========================
    SETTINGS
 ========================= */
 
 async function loadSettings() {
-  const data = await api("/api/settings");
+  try {
+    const data = await api("/api/settings");
 
-  document.title = `${data.class_name || "X MP 2"} — ${data.founder || "NAZUAN AHMAD"}`;
+    const className = data.class_name || "X MP 2";
+    const founder = data.founder || "NAZUAN AHMAD";
 
-  const heroTitle = document.querySelector(".hero h1");
-  const founder = document.querySelector(".founder strong");
-  const brand = document.querySelector(".brand strong");
+    const title = document.querySelector("title");
+    const heroTitle = document.querySelector(".hero h1");
+    const brand = document.querySelector(".brand strong");
+    const founderElement = document.querySelector(".founder strong");
 
-  if (heroTitle) {
-    heroTitle.textContent = data.class_name || "X MP 2";
-  }
+    if (title) {
+      title.textContent = `${className} — ${founder}`;
+    }
 
-  if (brand) {
-    brand.textContent = data.class_name || "X MP 2";
-  }
+    if (heroTitle) {
+      heroTitle.textContent = className;
+    }
 
-  if (founder) {
-    founder.textContent = data.founder || "NAZUAN AHMAD";
+    if (brand) {
+      brand.textContent = className;
+    }
+
+    if (founderElement) {
+      founderElement.textContent = founder;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Settings:", error);
+    return false;
   }
 }
 
 async function loadSettingsForm() {
-  const data = await api("/api/settings");
+  try {
+    const data = await api("/api/settings");
 
-  $("#settingClassName").value = data.class_name || "";
-  $("#settingFounder").value = data.founder || "";
-  $("#settingInstagram").value = data.instagram || "";
+    if ($("#settingClassName")) {
+      $("#settingClassName").value = data.class_name || "";
+    }
+
+    if ($("#settingFounder")) {
+      $("#settingFounder").value = data.founder || "";
+    }
+
+    if ($("#settingInstagram")) {
+      $("#settingInstagram").value = data.instagram || "";
+    }
+  } catch (error) {
+    toast(error.message);
+  }
 }
 
 /* =========================
@@ -120,39 +178,44 @@ async function loadSettingsForm() {
 ========================= */
 
 async function loadStudents() {
-  const loading = $("#studentLoading");
   const list = $("#studentList");
-  const empty = $("#studentEmpty");
 
-  loading.classList.remove("hidden");
+  hideLoading("#studentLoading");
+  hideEmpty("#studentEmpty");
+
+  if (!list) return;
 
   try {
     const students = await api("/api/students");
 
     list.innerHTML = "";
 
-    if (!students.length) {
-      empty.classList.remove("hidden");
+    if (!Array.isArray(students) || students.length === 0) {
+      showEmpty("#studentEmpty", "Belum ada data siswa.");
       return;
     }
-
-    empty.classList.add("hidden");
 
     students.forEach((student) => {
       const card = document.createElement("article");
 
       card.className = "student-card";
 
+      const image =
+        student.photo ||
+        "/default-student.svg";
+
       card.innerHTML = `
         <img
-          src="${escapeHTML(student.photo || "/default-student.svg")}"
+          src="${escapeHTML(image)}"
           alt="${escapeHTML(student.name)}"
-          onerror="this.src='/default-student.svg'"
+          onerror="this.onerror=null;this.src='/default-student.svg'"
         >
 
         <div class="student-body">
           <h3>${escapeHTML(student.name)}</h3>
-          <p>${escapeHTML(student.info || "Siswa X MP 2")}</p>
+          <p>
+            ${escapeHTML(student.info || "Siswa X MP 2")}
+          </p>
         </div>
       `;
 
@@ -160,9 +223,14 @@ async function loadStudents() {
     });
 
   } catch (error) {
-    list.innerHTML = `<div class="empty">Gagal memuat siswa: ${escapeHTML(error.message)}</div>`;
-  } finally {
-    loading.classList.add("hidden");
+    console.error("Students:", error);
+
+    list.innerHTML = `
+      <div class="empty">
+        Gagal memuat data siswa.<br>
+        <small>${escapeHTML(error.message)}</small>
+      </div>
+    `;
   }
 }
 
@@ -171,23 +239,22 @@ async function loadStudents() {
 ========================= */
 
 async function loadGallery() {
-  const loading = $("#galleryLoading");
   const list = $("#galleryList");
-  const empty = $("#galleryEmpty");
 
-  loading.classList.remove("hidden");
+  hideLoading("#galleryLoading");
+  hideEmpty("#galleryEmpty");
+
+  if (!list) return;
 
   try {
     const gallery = await api("/api/gallery");
 
     list.innerHTML = "";
 
-    if (!gallery.length) {
-      empty.classList.remove("hidden");
+    if (!Array.isArray(gallery) || gallery.length === 0) {
+      showEmpty("#galleryEmpty", "Belum ada foto galeri.");
       return;
     }
-
-    empty.classList.add("hidden");
 
     gallery.forEach((item) => {
       const card = document.createElement("article");
@@ -198,7 +265,7 @@ async function loadGallery() {
         <img
           src="${escapeHTML(item.image)}"
           alt="${escapeHTML(item.title)}"
-          onerror="this.style.display='none'"
+          loading="lazy"
         >
 
         <div class="gallery-title">
@@ -210,9 +277,14 @@ async function loadGallery() {
     });
 
   } catch (error) {
-    list.innerHTML = `<div class="empty">Gagal memuat galeri: ${escapeHTML(error.message)}</div>`;
-  } finally {
-    loading.classList.add("hidden");
+    console.error("Gallery:", error);
+
+    list.innerHTML = `
+      <div class="empty">
+        Gagal memuat galeri.<br>
+        <small>${escapeHTML(error.message)}</small>
+      </div>
+    `;
   }
 }
 
@@ -221,34 +293,38 @@ async function loadGallery() {
 ========================= */
 
 async function loadAnnouncements() {
-  const loading = $("#announcementLoading");
   const list = $("#announcementList");
-  const empty = $("#announcementEmpty");
 
-  loading.classList.remove("hidden");
+  hideLoading("#announcementLoading");
+  hideEmpty("#announcementEmpty");
+
+  if (!list) return;
 
   try {
-    const announcements = await api("/api/announcements");
+    const data = await api("/api/announcements");
 
     list.innerHTML = "";
 
-    if (!announcements.length) {
-      empty.classList.remove("hidden");
+    if (!Array.isArray(data) || data.length === 0) {
+      showEmpty(
+        "#announcementEmpty",
+        "Belum ada pengumuman."
+      );
       return;
     }
 
-    empty.classList.add("hidden");
-
-    announcements.forEach((item) => {
+    data.forEach((item) => {
       const card = document.createElement("article");
 
       card.className = "announcement-card";
 
       card.innerHTML = `
         <h3>${escapeHTML(item.title)}</h3>
+
         <p>${escapeHTML(item.content)}</p>
+
         <span class="date">
-          ${formatDate(item.created_at)}
+          ${escapeHTML(formatDate(item.created_at))}
         </span>
       `;
 
@@ -256,9 +332,14 @@ async function loadAnnouncements() {
     });
 
   } catch (error) {
-    list.innerHTML = `<div class="empty">Gagal memuat pengumuman: ${escapeHTML(error.message)}</div>`;
-  } finally {
-    loading.classList.add("hidden");
+    console.error("Announcements:", error);
+
+    list.innerHTML = `
+      <div class="empty">
+        Gagal memuat pengumuman.<br>
+        <small>${escapeHTML(error.message)}</small>
+      </div>
+    `;
   }
 }
 
@@ -267,36 +348,39 @@ async function loadAnnouncements() {
 ========================= */
 
 async function loadAgenda() {
-  const loading = $("#agendaLoading");
   const list = $("#agendaList");
-  const empty = $("#agendaEmpty");
 
-  loading.classList.remove("hidden");
+  hideLoading("#agendaLoading");
+  hideEmpty("#agendaEmpty");
+
+  if (!list) return;
 
   try {
-    const agenda = await api("/api/agenda");
+    const data = await api("/api/agenda");
 
     list.innerHTML = "";
 
-    if (!agenda.length) {
-      empty.classList.remove("hidden");
+    if (!Array.isArray(data) || data.length === 0) {
+      showEmpty("#agendaEmpty", "Belum ada agenda.");
       return;
     }
 
-    empty.classList.add("hidden");
-
-    agenda.forEach((item) => {
+    data.forEach((item) => {
       const date = new Date(item.event_date);
 
-      const day = Number.isNaN(date.getTime())
-        ? "-"
-        : date.getDate();
+      let day = "-";
+      let month = "";
 
-      const month = Number.isNaN(date.getTime())
-        ? ""
-        : date.toLocaleDateString("id-ID", {
+      if (!Number.isNaN(date.getTime())) {
+        day = date.getDate();
+
+        month = date.toLocaleDateString(
+          "id-ID",
+          {
             month: "short"
-          });
+          }
+        );
+      }
 
       const card = document.createElement("article");
 
@@ -304,7 +388,7 @@ async function loadAgenda() {
 
       card.innerHTML = `
         <div class="agenda-date">
-          <div>${day}</div>
+          <div>${escapeHTML(day)}</div>
           <small>${escapeHTML(month)}</small>
         </div>
 
@@ -318,9 +402,14 @@ async function loadAgenda() {
     });
 
   } catch (error) {
-    list.innerHTML = `<div class="empty">Gagal memuat agenda: ${escapeHTML(error.message)}</div>`;
-  } finally {
-    loading.classList.add("hidden");
+    console.error("Agenda:", error);
+
+    list.innerHTML = `
+      <div class="empty">
+        Gagal memuat agenda.<br>
+        <small>${escapeHTML(error.message)}</small>
+      </div>
+    `;
   }
 }
 
@@ -330,206 +419,330 @@ async function loadAgenda() {
 
 async function checkLogin() {
   try {
-    const result = await api("/api/auth/me");
+    const data = await api("/api/auth/me");
 
-    if (!result.loggedIn) {
-      $("#loginBox").classList.remove("hidden");
-      $("#dashboard").classList.add("hidden");
+    const loginBox = $("#loginBox");
+    const dashboard = $("#dashboard");
+
+    if (!data.loggedIn) {
+      loginBox?.classList.remove("hidden");
+      dashboard?.classList.add("hidden");
       return;
     }
 
-    $("#loginBox").classList.add("hidden");
-    $("#dashboard").classList.remove("hidden");
+    loginBox?.classList.add("hidden");
+    dashboard?.classList.remove("hidden");
 
-    $("#adminName").textContent = result.user.name || "Admin";
-    $("#adminEmail").textContent = result.user.email || "";
-    $("#adminRole").textContent = String(result.user.role || "admin").toUpperCase();
+    if ($("#adminName")) {
+      $("#adminName").textContent =
+        data.user?.name || "Admin";
+    }
 
-    const isOwner = result.user.role === "owner";
+    if ($("#adminEmail")) {
+      $("#adminEmail").textContent =
+        data.user?.email || "";
+    }
 
-    document.querySelectorAll(".owner-only").forEach((element) => {
-      element.classList.toggle("hidden", !isOwner);
-    });
+    if ($("#adminRole")) {
+      $("#adminRole").textContent =
+        String(data.user?.role || "admin").toUpperCase();
+    }
+
+    const isOwner =
+      data.user?.role === "owner";
+
+    document
+      .querySelectorAll(".owner-only")
+      .forEach((element) => {
+        element.classList.toggle(
+          "hidden",
+          !isOwner
+        );
+      });
 
     await loadAdminData();
 
   } catch (error) {
-    console.error("Auth error:", error);
+    console.error("Auth:", error);
 
-    $("#loginBox").classList.remove("hidden");
-    $("#dashboard").classList.add("hidden");
+    $("#loginBox")?.classList.remove("hidden");
+    $("#dashboard")?.classList.add("hidden");
   }
 }
 
-$("#googleLoginBtn").addEventListener("click", () => {
-  window.location.href = "/auth/google";
-});
-
-$("#logoutBtn").addEventListener("click", async () => {
-  try {
-    await api("/api/auth/logout", {
-      method: "POST"
-    });
-
-    showToast("Berhasil logout.");
-
-    setTimeout(() => {
-      window.location.reload();
-    }, 500);
-
-  } catch (error) {
-    showToast(error.message);
+$("#googleLoginBtn")?.addEventListener(
+  "click",
+  () => {
+    window.location.href = "/auth/google";
   }
-});
+);
+
+$("#logoutBtn")?.addEventListener(
+  "click",
+  async () => {
+
+    try {
+      await api(
+        "/api/auth/logout",
+        {
+          method: "POST"
+        }
+      );
+
+      toast("Berhasil logout.");
+
+      setTimeout(() => {
+        location.reload();
+      }, 500);
+
+    } catch (error) {
+      toast(error.message);
+    }
+  }
+);
 
 /* =========================
-   ADMIN TABS
+   TABS
 ========================= */
 
-document.querySelectorAll(".tab").forEach((tab) => {
-  tab.addEventListener("click", async () => {
+document.querySelectorAll(".tab").forEach(
+  (tab) => {
 
-    if (tab.classList.contains("hidden")) {
-      return;
-    }
+    tab.addEventListener(
+      "click",
+      async () => {
 
-    const target = tab.dataset.tab;
+        if (tab.classList.contains("hidden")) {
+          return;
+        }
 
-    document.querySelectorAll(".tab").forEach((item) => {
-      item.classList.remove("active");
-    });
+        const target =
+          tab.dataset.tab;
 
-    document.querySelectorAll(".tab-content").forEach((item) => {
-      item.classList.remove("active");
-    });
+        document
+          .querySelectorAll(".tab")
+          .forEach((item) => {
+            item.classList.remove("active");
+          });
 
-    tab.classList.add("active");
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((item) => {
+            item.classList.remove("active");
+          });
 
-    const content = document.querySelector(`#tab-${target}`);
+        tab.classList.add("active");
 
-    if (content) {
-      content.classList.add("active");
-    }
+        const content =
+          document.querySelector(
+            `#tab-${target}`
+          );
 
-    if (target === "settings") {
-      await loadSettingsForm();
-    }
+        if (content) {
+          content.classList.add("active");
+        }
 
-    if (target === "admins") {
-      await loadAdmins();
-    }
-  });
-});
+        try {
+
+          if (target === "settings") {
+            await loadSettingsForm();
+          }
+
+          if (target === "admins") {
+            await loadAdmins();
+          }
+
+          if (target === "students") {
+            await loadAdminStudents();
+          }
+
+          if (target === "gallery") {
+            await loadAdminGallery();
+          }
+
+          if (target === "announcements") {
+            await loadAdminAnnouncements();
+          }
+
+          if (target === "agenda") {
+            await loadAdminAgenda();
+          }
+
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    );
+
+  }
+);
 
 /* =========================
-   UPLOAD IMAGE
+   UPLOAD
 ========================= */
 
 async function uploadImage(file) {
+
   if (!file) {
-    return null;
+    throw new Error(
+      "File gambar belum dipilih."
+    );
   }
 
   if (!file.type.startsWith("image/")) {
-    throw new Error("File harus berupa gambar.");
+    throw new Error(
+      "File harus berupa gambar."
+    );
   }
 
   if (file.size > 10 * 1024 * 1024) {
-    throw new Error("Ukuran gambar maksimal 10 MB.");
+    throw new Error(
+      "Ukuran gambar maksimal 10 MB."
+    );
   }
 
   const formData = new FormData();
 
-  formData.append("image", file);
+  formData.append(
+    "image",
+    file
+  );
 
-  return await api("/api/uploads", {
-    method: "POST",
-    body: formData
-  });
+  return await api(
+    "/api/uploads",
+    {
+      method: "POST",
+      body: formData
+    }
+  );
 }
 
 /* =========================
-   ADD STUDENT
+   STUDENT FORM
 ========================= */
 
-$("#studentForm").addEventListener("submit", async (event) => {
-  event.preventDefault();
+$("#studentForm")?.addEventListener(
+  "submit",
+  async (event) => {
 
-  const button = event.submitter;
+    event.preventDefault();
 
-  button.disabled = true;
+    const button =
+      event.submitter;
 
-  try {
-    const name = $("#studentName").value.trim();
-    const info = $("#studentInfo").value.trim();
-    const file = $("#studentPhoto").files[0];
-
-    let photo = null;
-
-    if (file) {
-      const uploaded = await uploadImage(file);
-      photo = uploaded.url;
+    if (button) {
+      button.disabled = true;
     }
 
-    await api("/api/students", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        name,
-        info,
-        photo
-      })
-    });
+    try {
 
-    event.target.reset();
+      const name =
+        $("#studentName").value.trim();
 
-    showToast("Siswa berhasil ditambahkan.");
+      const info =
+        $("#studentInfo").value.trim();
 
-    await loadStudents();
-    await loadAdminStudents();
+      const file =
+        $("#studentPhoto").files[0];
 
-  } catch (error) {
-    showToast(error.message);
-  } finally {
-    button.disabled = false;
+      let photo = "";
+
+      if (file) {
+        const upload =
+          await uploadImage(file);
+
+        photo =
+          upload.url || "";
+      }
+
+      await api(
+        "/api/students",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+          body: JSON.stringify({
+            name,
+            info,
+            photo
+          })
+        }
+      );
+
+      event.target.reset();
+
+      toast(
+        "Siswa berhasil ditambahkan."
+      );
+
+      await loadStudents();
+      await loadAdminStudents();
+
+    } catch (error) {
+
+      console.error(error);
+      toast(error.message);
+
+    } finally {
+
+      if (button) {
+        button.disabled = false;
+      }
+    }
   }
-});
+);
 
 /* =========================
    ADMIN STUDENTS
 ========================= */
 
 async function loadAdminStudents() {
-  const list = $("#adminStudentList");
+
+  const list =
+    $("#adminStudentList");
+
+  if (!list) return;
 
   try {
-    const students = await api("/api/students");
+
+    const data =
+      await api("/api/students");
 
     list.innerHTML = "";
 
-    if (!students.length) {
-      list.innerHTML = `<div class="empty">Belum ada siswa.</div>`;
+    if (!data.length) {
+      list.innerHTML =
+        `<div class="empty">Belum ada siswa.</div>`;
       return;
     }
 
-    students.forEach((student) => {
+    data.forEach((student) => {
 
-      const item = document.createElement("div");
+      const item =
+        document.createElement("div");
 
-      item.className = "admin-data-item";
+      item.className =
+        "admin-data-item";
 
       item.innerHTML = `
         <div class="admin-data-main">
-          <strong>${escapeHTML(student.name)}</strong>
-          <span>${escapeHTML(student.info || "Siswa")}</span>
+          <strong>
+            ${escapeHTML(student.name)}
+          </strong>
+
+          <span>
+            ${escapeHTML(
+              student.info || "Siswa"
+            )}
+          </span>
         </div>
 
         <button
+          type="button"
           class="btn danger small"
           data-delete-student="${student.id}"
-          type="button"
         >
           Hapus
         </button>
@@ -539,117 +752,167 @@ async function loadAdminStudents() {
     });
 
   } catch (error) {
-    list.innerHTML = `<div class="empty">${escapeHTML(error.message)}</div>`;
+
+    list.innerHTML = `
+      <div class="empty">
+        ${escapeHTML(error.message)}
+      </div>
+    `;
   }
 }
 
-$("#adminStudentList").addEventListener("click", async (event) => {
+$("#adminStudentList")?.addEventListener(
+  "click",
+  async (event) => {
 
-  const button = event.target.closest("[data-delete-student]");
+    const button =
+      event.target.closest(
+        "[data-delete-student]"
+      );
 
-  if (!button) return;
+    if (!button) return;
 
-  const id = button.dataset.deleteStudent;
-
-  if (!confirm("Hapus siswa ini?")) return;
-
-  try {
-
-    await api(`/api/students/${id}`, {
-      method: "DELETE"
-    });
-
-    showToast("Siswa berhasil dihapus.");
-
-    await loadStudents();
-    await loadAdminStudents();
-
-  } catch (error) {
-    showToast(error.message);
-  }
-});
-
-/* =========================
-   UPLOAD GALLERY
-========================= */
-
-$("#uploadForm").addEventListener("submit", async (event) => {
-  event.preventDefault();
-
-  const button = event.submitter;
-
-  button.disabled = true;
-
-  try {
-
-    const title = $("#photoTitle").value.trim();
-    const file = $("#photoFile").files[0];
-
-    if (!file) {
-      throw new Error("Pilih foto terlebih dahulu.");
+    if (!confirm(
+      "Yakin ingin menghapus siswa ini?"
+    )) {
+      return;
     }
 
-    const uploaded = await uploadImage(file);
+    try {
 
-    await api("/api/gallery", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        title,
-        image: uploaded.url
-      })
-    });
+      await api(
+        `/api/students/${button.dataset.deleteStudent}`,
+        {
+          method: "DELETE"
+        }
+      );
 
-    event.target.reset();
+      toast(
+        "Siswa berhasil dihapus."
+      );
 
-    showToast("Foto berhasil diupload.");
+      await loadStudents();
+      await loadAdminStudents();
 
-    await loadGallery();
-    await loadAdminGallery();
-
-  } catch (error) {
-    showToast(error.message);
-  } finally {
-    button.disabled = false;
+    } catch (error) {
+      toast(error.message);
+    }
   }
-});
+);
+
+/* =========================
+   GALLERY FORM
+========================= */
+
+$("#uploadForm")?.addEventListener(
+  "submit",
+  async (event) => {
+
+    event.preventDefault();
+
+    const button =
+      event.submitter;
+
+    if (button) {
+      button.disabled = true;
+    }
+
+    try {
+
+      const title =
+        $("#photoTitle").value.trim();
+
+      const file =
+        $("#photoFile").files[0];
+
+      const upload =
+        await uploadImage(file);
+
+      await api(
+        "/api/gallery",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+          body: JSON.stringify({
+            title,
+            image: upload.url
+          })
+        }
+      );
+
+      event.target.reset();
+
+      toast(
+        "Foto berhasil ditambahkan."
+      );
+
+      await loadGallery();
+      await loadAdminGallery();
+
+    } catch (error) {
+
+      console.error(error);
+      toast(error.message);
+
+    } finally {
+
+      if (button) {
+        button.disabled = false;
+      }
+    }
+  }
+);
 
 /* =========================
    ADMIN GALLERY
 ========================= */
 
 async function loadAdminGallery() {
-  const list = $("#adminGalleryList");
+
+  const list =
+    $("#adminGalleryList");
+
+  if (!list) return;
 
   try {
 
-    const gallery = await api("/api/gallery");
+    const data =
+      await api("/api/gallery");
 
     list.innerHTML = "";
 
-    if (!gallery.length) {
-      list.innerHTML = `<div class="empty">Belum ada foto.</div>`;
+    if (!data.length) {
+      list.innerHTML =
+        `<div class="empty">Belum ada foto.</div>`;
       return;
     }
 
-    gallery.forEach((item) => {
+    data.forEach((item) => {
 
-      const element = document.createElement("div");
+      const element =
+        document.createElement("div");
 
-      element.className = "admin-data-item";
+      element.className =
+        "admin-data-item";
 
       element.innerHTML = `
         <div class="admin-data-main">
-          <strong>${escapeHTML(item.title)}</strong>
-          <span>${escapeHTML(item.image)}</span>
+          <strong>
+            ${escapeHTML(item.title)}
+          </strong>
+
+          <span>
+            Foto galeri
+          </span>
         </div>
 
         <button
+          type="button"
           class="btn danger small"
           data-delete-gallery="${item.id}"
-          type="button"
         >
           Hapus
         </button>
@@ -659,74 +922,116 @@ async function loadAdminGallery() {
     });
 
   } catch (error) {
-    list.innerHTML = `<div class="empty">${escapeHTML(error.message)}</div>`;
+
+    list.innerHTML = `
+      <div class="empty">
+        ${escapeHTML(error.message)}
+      </div>
+    `;
   }
 }
 
-$("#adminGalleryList").addEventListener("click", async (event) => {
+$("#adminGalleryList")?.addEventListener(
+  "click",
+  async (event) => {
 
-  const button = event.target.closest("[data-delete-gallery]");
+    const button =
+      event.target.closest(
+        "[data-delete-gallery]"
+      );
 
-  if (!button) return;
+    if (!button) return;
 
-  const id = button.dataset.deleteGallery;
+    if (!confirm(
+      "Yakin ingin menghapus foto ini?"
+    )) {
+      return;
+    }
 
-  if (!confirm("Hapus foto ini?")) return;
+    try {
 
-  try {
+      await api(
+        `/api/gallery/${button.dataset.deleteGallery}`,
+        {
+          method: "DELETE"
+        }
+      );
 
-    await api(`/api/gallery/${id}`, {
-      method: "DELETE"
-    });
+      toast(
+        "Foto berhasil dihapus."
+      );
 
-    showToast("Foto berhasil dihapus.");
+      await loadGallery();
+      await loadAdminGallery();
 
-    await loadGallery();
-    await loadAdminGallery();
-
-  } catch (error) {
-    showToast(error.message);
+    } catch (error) {
+      toast(error.message);
+    }
   }
-});
+);
 
 /* =========================
    ANNOUNCEMENT FORM
 ========================= */
 
-$("#announcementForm").addEventListener("submit", async (event) => {
+$("#announcementForm")?.addEventListener(
+  "submit",
+  async (event) => {
 
-  event.preventDefault();
+    event.preventDefault();
 
-  const button = event.submitter;
+    const button =
+      event.submitter;
 
-  button.disabled = true;
+    if (button) {
+      button.disabled = true;
+    }
 
-  try {
+    try {
 
-    await api("/api/announcements", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        title: $("#announcementTitle").value.trim(),
-        content: $("#announcementContent").value.trim()
-      })
-    });
+      await api(
+        "/api/announcements",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+          body: JSON.stringify({
+            title:
+              $("#announcementTitle")
+                .value
+                .trim(),
 
-    event.target.reset();
+            content:
+              $("#announcementContent")
+                .value
+                .trim()
+          })
+        }
+      );
 
-    showToast("Pengumuman berhasil dibuat.");
+      event.target.reset();
 
-    await loadAnnouncements();
-    await loadAdminAnnouncements();
+      toast(
+        "Pengumuman berhasil dibuat."
+      );
 
-  } catch (error) {
-    showToast(error.message);
-  } finally {
-    button.disabled = false;
+      await loadAnnouncements();
+      await loadAdminAnnouncements();
+
+    } catch (error) {
+
+      toast(error.message);
+
+    } finally {
+
+      if (button) {
+        button.disabled = false;
+      }
+    }
   }
-});
+);
 
 /* =========================
    ADMIN ANNOUNCEMENTS
@@ -734,35 +1039,49 @@ $("#announcementForm").addEventListener("submit", async (event) => {
 
 async function loadAdminAnnouncements() {
 
-  const list = $("#adminAnnouncementList");
+  const list =
+    $("#adminAnnouncementList");
+
+  if (!list) return;
 
   try {
 
-    const data = await api("/api/announcements");
+    const data =
+      await api("/api/announcements");
 
     list.innerHTML = "";
 
     if (!data.length) {
-      list.innerHTML = `<div class="empty">Belum ada pengumuman.</div>`;
+      list.innerHTML =
+        `<div class="empty">Belum ada pengumuman.</div>`;
       return;
     }
 
     data.forEach((item) => {
 
-      const element = document.createElement("div");
+      const element =
+        document.createElement("div");
 
-      element.className = "admin-data-item";
+      element.className =
+        "admin-data-item";
 
       element.innerHTML = `
         <div class="admin-data-main">
-          <strong>${escapeHTML(item.title)}</strong>
-          <span>${escapeHTML(formatDate(item.created_at))}</span>
+          <strong>
+            ${escapeHTML(item.title)}
+          </strong>
+
+          <span>
+            ${escapeHTML(
+              formatDate(item.created_at)
+            )}
+          </span>
         </div>
 
         <button
+          type="button"
           class="btn danger small"
           data-delete-announcement="${item.id}"
-          type="button"
         >
           Hapus
         </button>
@@ -772,73 +1091,120 @@ async function loadAdminAnnouncements() {
     });
 
   } catch (error) {
-    list.innerHTML = `<div class="empty">${escapeHTML(error.message)}</div>`;
+
+    list.innerHTML = `
+      <div class="empty">
+        ${escapeHTML(error.message)}
+      </div>
+    `;
   }
 }
 
-$("#adminAnnouncementList").addEventListener("click", async (event) => {
+$("#adminAnnouncementList")?.addEventListener(
+  "click",
+  async (event) => {
 
-  const button = event.target.closest("[data-delete-announcement]");
+    const button =
+      event.target.closest(
+        "[data-delete-announcement]"
+      );
 
-  if (!button) return;
+    if (!button) return;
 
-  if (!confirm("Hapus pengumuman ini?")) return;
+    if (!confirm(
+      "Yakin ingin menghapus pengumuman ini?"
+    )) {
+      return;
+    }
 
-  try {
+    try {
 
-    await api(`/api/announcements/${button.dataset.deleteAnnouncement}`, {
-      method: "DELETE"
-    });
+      await api(
+        `/api/announcements/${button.dataset.deleteAnnouncement}`,
+        {
+          method: "DELETE"
+        }
+      );
 
-    showToast("Pengumuman berhasil dihapus.");
+      toast(
+        "Pengumuman berhasil dihapus."
+      );
 
-    await loadAnnouncements();
-    await loadAdminAnnouncements();
+      await loadAnnouncements();
+      await loadAdminAnnouncements();
 
-  } catch (error) {
-    showToast(error.message);
+    } catch (error) {
+      toast(error.message);
+    }
   }
-});
+);
 
 /* =========================
    AGENDA FORM
 ========================= */
 
-$("#agendaForm").addEventListener("submit", async (event) => {
+$("#agendaForm")?.addEventListener(
+  "submit",
+  async (event) => {
 
-  event.preventDefault();
+    event.preventDefault();
 
-  const button = event.submitter;
+    const button =
+      event.submitter;
 
-  button.disabled = true;
+    if (button) {
+      button.disabled = true;
+    }
 
-  try {
+    try {
 
-    await api("/api/agenda", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        title: $("#agendaTitle").value.trim(),
-        event_date: $("#agendaDate").value,
-        description: $("#agendaDescription").value.trim()
-      })
-    });
+      await api(
+        "/api/agenda",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+          body: JSON.stringify({
+            title:
+              $("#agendaTitle")
+                .value
+                .trim(),
 
-    event.target.reset();
+            event_date:
+              $("#agendaDate")
+                .value,
 
-    showToast("Agenda berhasil ditambahkan.");
+            description:
+              $("#agendaDescription")
+                .value
+                .trim()
+          })
+        }
+      );
 
-    await loadAgenda();
-    await loadAdminAgenda();
+      event.target.reset();
 
-  } catch (error) {
-    showToast(error.message);
-  } finally {
-    button.disabled = false;
+      toast(
+        "Agenda berhasil ditambahkan."
+      );
+
+      await loadAgenda();
+      await loadAdminAgenda();
+
+    } catch (error) {
+
+      toast(error.message);
+
+    } finally {
+
+      if (button) {
+        button.disabled = false;
+      }
+    }
   }
-});
+);
 
 /* =========================
    ADMIN AGENDA
@@ -846,35 +1212,47 @@ $("#agendaForm").addEventListener("submit", async (event) => {
 
 async function loadAdminAgenda() {
 
-  const list = $("#adminAgendaList");
+  const list =
+    $("#adminAgendaList");
+
+  if (!list) return;
 
   try {
 
-    const data = await api("/api/agenda");
+    const data =
+      await api("/api/agenda");
 
     list.innerHTML = "";
 
     if (!data.length) {
-      list.innerHTML = `<div class="empty">Belum ada agenda.</div>`;
+      list.innerHTML =
+        `<div class="empty">Belum ada agenda.</div>`;
       return;
     }
 
     data.forEach((item) => {
 
-      const element = document.createElement("div");
+      const element =
+        document.createElement("div");
 
-      element.className = "admin-data-item";
+      element.className =
+        "admin-data-item";
 
       element.innerHTML = `
         <div class="admin-data-main">
-          <strong>${escapeHTML(item.title)}</strong>
-          <span>${escapeHTML(item.event_date)}</span>
+          <strong>
+            ${escapeHTML(item.title)}
+          </strong>
+
+          <span>
+            ${escapeHTML(item.event_date)}
+          </span>
         </div>
 
         <button
+          type="button"
           class="btn danger small"
           data-delete-agenda="${item.id}"
-          type="button"
         >
           Hapus
         </button>
@@ -884,70 +1262,118 @@ async function loadAdminAgenda() {
     });
 
   } catch (error) {
-    list.innerHTML = `<div class="empty">${escapeHTML(error.message)}</div>`;
+
+    list.innerHTML = `
+      <div class="empty">
+        ${escapeHTML(error.message)}
+      </div>
+    `;
   }
 }
 
-$("#adminAgendaList").addEventListener("click", async (event) => {
+$("#adminAgendaList")?.addEventListener(
+  "click",
+  async (event) => {
 
-  const button = event.target.closest("[data-delete-agenda]");
+    const button =
+      event.target.closest(
+        "[data-delete-agenda]"
+      );
 
-  if (!button) return;
+    if (!button) return;
 
-  if (!confirm("Hapus agenda ini?")) return;
+    if (!confirm(
+      "Yakin ingin menghapus agenda ini?"
+    )) {
+      return;
+    }
 
-  try {
+    try {
 
-    await api(`/api/agenda/${button.dataset.deleteAgenda}`, {
-      method: "DELETE"
-    });
+      await api(
+        `/api/agenda/${button.dataset.deleteAgenda}`,
+        {
+          method: "DELETE"
+        }
+      );
 
-    showToast("Agenda berhasil dihapus.");
+      toast(
+        "Agenda berhasil dihapus."
+      );
 
-    await loadAgenda();
-    await loadAdminAgenda();
+      await loadAgenda();
+      await loadAdminAgenda();
 
-  } catch (error) {
-    showToast(error.message);
+    } catch (error) {
+      toast(error.message);
+    }
   }
-});
+);
 
 /* =========================
    SETTINGS FORM
 ========================= */
 
-$("#settingsForm").addEventListener("submit", async (event) => {
+$("#settingsForm")?.addEventListener(
+  "submit",
+  async (event) => {
 
-  event.preventDefault();
+    event.preventDefault();
 
-  const button = event.submitter;
+    const button =
+      event.submitter;
 
-  button.disabled = true;
+    if (button) {
+      button.disabled = true;
+    }
 
-  try {
+    try {
 
-    await api("/api/settings", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        class_name: $("#settingClassName").value.trim(),
-        founder: $("#settingFounder").value.trim(),
-        instagram: $("#settingInstagram").value.trim()
-      })
-    });
+      await api(
+        "/api/settings",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+          body: JSON.stringify({
+            class_name:
+              $("#settingClassName")
+                .value
+                .trim(),
 
-    showToast("Pengaturan berhasil disimpan.");
+            founder:
+              $("#settingFounder")
+                .value
+                .trim(),
 
-    await loadSettings();
+            instagram:
+              $("#settingInstagram")
+                .value
+                .trim()
+          })
+        }
+      );
 
-  } catch (error) {
-    showToast(error.message);
-  } finally {
-    button.disabled = false;
+      toast(
+        "Pengaturan berhasil disimpan."
+      );
+
+      await loadSettings();
+
+    } catch (error) {
+
+      toast(error.message);
+
+    } finally {
+
+      if (button) {
+        button.disabled = false;
+      }
+    }
   }
-});
+);
 
 /* =========================
    ADMIN MANAGEMENT
@@ -955,45 +1381,57 @@ $("#settingsForm").addEventListener("submit", async (event) => {
 
 async function loadAdmins() {
 
-  const list = $("#adminList");
+  const list =
+    $("#adminList");
+
+  if (!list) return;
 
   try {
 
-    const data = await api("/api/admins");
+    const data =
+      await api("/api/admins");
 
     list.innerHTML = "";
 
     if (!data.length) {
-      list.innerHTML = `<div class="empty">Belum ada admin.</div>`;
+      list.innerHTML =
+        `<div class="empty">Belum ada admin.</div>`;
       return;
     }
 
     data.forEach((admin) => {
 
-      const item = document.createElement("div");
+      const item =
+        document.createElement("div");
 
-      item.className = "admin-data-item";
-
-      const canDelete = admin.role !== "owner";
+      item.className =
+        "admin-data-item";
 
       item.innerHTML = `
         <div class="admin-data-main">
-          <strong>${escapeHTML(admin.email)}</strong>
-          <span>${escapeHTML(admin.role.toUpperCase())}</span>
+          <strong>
+            ${escapeHTML(admin.email)}
+          </strong>
+
+          <span>
+            ${escapeHTML(
+              String(admin.role).toUpperCase()
+            )}
+          </span>
         </div>
 
         ${
-          canDelete
-            ? `
+          admin.role === "owner"
+            ? `<span class="role-badge">OWNER</span>`
+            : `
               <button
+                type="button"
                 class="btn danger small"
                 data-delete-admin="${admin.id}"
-                type="button"
               >
                 Hapus
               </button>
             `
-            : `<span class="role-badge">OWNER</span>`
         }
       `;
 
@@ -1010,70 +1448,109 @@ async function loadAdmins() {
   }
 }
 
-$("#adminForm").addEventListener("submit", async (event) => {
+$("#adminForm")?.addEventListener(
+  "submit",
+  async (event) => {
 
-  event.preventDefault();
+    event.preventDefault();
 
-  const button = event.submitter;
+    const button =
+      event.submitter;
 
-  button.disabled = true;
+    if (button) {
+      button.disabled = true;
+    }
 
-  try {
+    try {
 
-    await api("/api/admins", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        email: $("#adminEmailInput").value.trim().toLowerCase(),
-        role: $("#adminRoleInput").value
-      })
-    });
+      await api(
+        "/api/admins",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+          body: JSON.stringify({
+            email:
+              $("#adminEmailInput")
+                .value
+                .trim()
+                .toLowerCase(),
 
-    event.target.reset();
+            role:
+              $("#adminRoleInput")
+                .value
+          })
+        }
+      );
 
-    showToast("Admin berhasil ditambahkan.");
+      event.target.reset();
 
-    await loadAdmins();
+      toast(
+        "Admin berhasil ditambahkan."
+      );
 
-  } catch (error) {
-    showToast(error.message);
-  } finally {
-    button.disabled = false;
+      await loadAdmins();
+
+    } catch (error) {
+
+      toast(error.message);
+
+    } finally {
+
+      if (button) {
+        button.disabled = false;
+      }
+    }
   }
-});
+);
 
-$("#adminList").addEventListener("click", async (event) => {
+$("#adminList")?.addEventListener(
+  "click",
+  async (event) => {
 
-  const button = event.target.closest("[data-delete-admin]");
+    const button =
+      event.target.closest(
+        "[data-delete-admin]"
+      );
 
-  if (!button) return;
+    if (!button) return;
 
-  if (!confirm("Hapus admin ini?")) return;
+    if (!confirm(
+      "Yakin ingin menghapus admin ini?"
+    )) {
+      return;
+    }
 
-  try {
+    try {
 
-    await api(`/api/admins/${button.dataset.deleteAdmin}`, {
-      method: "DELETE"
-    });
+      await api(
+        `/api/admins/${button.dataset.deleteAdmin}`,
+        {
+          method: "DELETE"
+        }
+      );
 
-    showToast("Admin berhasil dihapus.");
+      toast(
+        "Admin berhasil dihapus."
+      );
 
-    await loadAdmins();
+      await loadAdmins();
 
-  } catch (error) {
-    showToast(error.message);
+    } catch (error) {
+      toast(error.message);
+    }
   }
-});
+);
 
 /* =========================
-   LOAD ADMIN DATA
+   ADMIN DATA
 ========================= */
 
 async function loadAdminData() {
 
-  await Promise.all([
+  await Promise.allSettled([
     loadAdminStudents(),
     loadAdminGallery(),
     loadAdminAnnouncements(),
@@ -1083,12 +1560,21 @@ async function loadAdminData() {
 }
 
 /* =========================
-   INITIAL LOAD
+   INITIALIZATION
 ========================= */
 
-async function loadWebsite() {
+async function init() {
 
-  await Promise.all([
+  console.log(
+    "X MP 2 website starting..."
+  );
+
+  /*
+    Masing-masing loader berdiri sendiri.
+    Kalau satu error, yang lain tetap jalan.
+  */
+
+  await Promise.allSettled([
     loadSettings(),
     loadStudents(),
     loadGallery(),
@@ -1097,6 +1583,23 @@ async function loadWebsite() {
   ]);
 
   await checkLogin();
+
+  console.log(
+    "X MP 2 website loaded."
+  );
 }
 
-document.addEventListener("DOMContentLoaded", loadWebsite);
+if (
+  document.readyState === "loading"
+) {
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    init
+  );
+
+} else {
+
+  init();
+
+       }
