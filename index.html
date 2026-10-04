@@ -4,13 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>X MP 2 — Class Portal</title>
-    <meta name="description" content="Portal resmi kelas X MP 2">
+    <title>X MP 2 | Class Portal</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+
+    <!-- POPUP NAMA -->
+    <div id="nameModal" class="modal-overlay">
+        <div class="name-modal">
+            <div class="modal-logo">
+                <img src="foto/logo.png" alt="Logo X MP 2"
+                     onerror="imageFallback(this, 'X MP 2')">
+            </div>
+
+            <h2>Selamat Datang 👋</h2>
+            <p>Masukkan nama kamu untuk masuk ke portal kelas.</p>
+
+            <input
+                type="text"
+                id="visitorNameInput"
+                placeholder="Masukkan nama kamu..."
+                maxlength="30"
+                autocomplete="off"
+            >
+
+            <button id="enterWebsiteBtn" class="primary-btn">
+                Masuk Website
+            </button>
+
+            <small>Portal Kelas X MP 2</small>
+        </div>
+    </div>
+
 
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
@@ -19,17 +46,16 @@
             <div class="brand-logo">
                 <img src="foto/logo.png"
                      alt="Logo X MP 2"
-                     onerror="this.style.display='none'; this.parentElement.classList.add('logo-fallback');">
-                <span class="logo-text">X2</span>
+                     onerror="imageFallback(this, 'X MP 2')">
             </div>
 
             <div>
                 <h2>X MP 2</h2>
-                <span>Class Portal</span>
+                <span>CLASS PORTAL</span>
             </div>
         </div>
 
-        <nav class="nav">
+        <nav class="nav-menu">
 
             <a href="#dashboard" class="nav-link active">
                 <span>⌂</span>
@@ -37,17 +63,17 @@
             </a>
 
             <a href="#struktur" class="nav-link">
-                <span>♙</span>
+                <span>♟</span>
                 Struktur
             </a>
 
             <a href="#siswa" class="nav-link">
-                <span>☻</span>
-                Siswa
+                <span>♙</span>
+                Data Siswa
             </a>
 
-            <a href="#foto" class="nav-link">
-                <span>▣</span>
+            <a href="#foto-kelas" class="nav-link">
+                <span>▧</span>
                 Foto Kelas
             </a>
 
@@ -62,7 +88,7 @@
             </a>
 
             <a href="#agenda" class="nav-link">
-                <span>□</span>
+                <span>◷</span>
                 Agenda
             </a>
 
@@ -75,13 +101,17 @@
 
         <div class="sidebar-bottom">
 
-            <button id="themeBtn" class="theme-btn">
-                <span id="themeIcon">☾</span>
-                <span>Mode Gelap</span>
+            <button id="themeBtn" class="side-action">
+                ◐ <span>Mode Tampilan</span>
             </button>
 
-            <div class="sidebar-footer">
-                X MP 2 © 2026
+            <button id="changeNameBtn" class="side-action">
+                ✎ <span>Ganti Nama</span>
+            </button>
+
+            <div class="founder-mini">
+                <span>FOUNDER WEBSITE</span>
+                <strong>NAZUAN AHMAD</strong>
             </div>
 
         </div>
@@ -89,227 +119,109 @@
     </aside>
 
 
-    <!-- OVERLAY MOBILE -->
-    <div class="overlay" id="overlay"></div>
-
-
     <!-- MAIN -->
-    <main class="main">
+    <main class="main-content">
 
         <!-- TOPBAR -->
         <header class="topbar">
 
-            <button class="menu-btn" id="menuBtn">
+            <button id="menuBtn" class="menu-btn">
                 ☰
             </button>
 
-            <div class="topbar-title">
-                <span>Portal Kelas</span>
-                <strong>X MP 2</strong>
+            <div class="page-title">
+                <span>CLASS PORTAL</span>
+                <h1>X MP 2</h1>
             </div>
 
-            <div class="topbar-right">
-                <span class="status-dot"></span>
-                <span>Online</span>
+            <div class="visitor-box">
+                <span>Pengunjung</span>
+                <strong id="visitorName">-</strong>
             </div>
 
         </header>
 
 
         <!-- DASHBOARD -->
-        <section id="dashboard" class="section dashboard-section">
+        <section id="dashboard" class="section">
 
-            <div class="dashboard">
+            <div class="hero">
 
-                <!-- HERO -->
-                <div class="hero">
+                <div class="hero-image">
+                    <img
+                        src="foto/foto-kelas.jpg"
+                        alt="Foto Kelas X MP 2"
+                        onerror="imageFallback(this, 'X MP 2')"
+                    >
+                </div>
 
-                    <div class="hero-background"></div>
+                <div class="hero-content">
 
-                    <div class="hero-content">
+                    <span class="badge">
+                        PORTAL KELAS
+                    </span>
 
-                        <div class="hero-badge">
-                            PORTAL RESMI KELAS
-                        </div>
+                    <h2>Selamat Datang di<br><strong>X MP 2</strong></h2>
 
-                        <h1>
-                            Selamat Datang di
-                            <span>X MP 2</span>
-                        </h1>
+                    <p>
+                        Pusat informasi, struktur kelas, data siswa,
+                        dokumentasi, agenda, dan berbagai informasi
+                        kelas X MP 2.
+                    </p>
 
-                        <p>
-                            Pusat informasi, struktur kelas, siswa,
-                            dokumentasi, agenda, dan informasi terbaru
-                            kelas X MP 2.
-                        </p>
-
-                        <div class="hero-buttons">
-                            <a href="#siswa" class="primary-btn">
-                                Lihat Siswa
-                            </a>
-
-                            <a href="#foto" class="secondary-btn">
-                                Lihat Foto
-                            </a>
-                        </div>
-
+                    <div class="welcome-user">
+                        <span>Selamat datang,</span>
+                        <strong id="dashboardVisitorName">Pengunjung</strong>
                     </div>
 
+                    <div class="hero-buttons">
+                        <a href="#struktur" class="primary-btn">
+                            Lihat Struktur
+                        </a>
 
-                    <!-- FOTO KELAS -->
-                    <div class="hero-photo">
-
-                        <div class="hero-photo-frame">
-
-                            <img
-                                src="foto/foto-kelas.jpg"
-                                alt="Foto Kelas X MP 2"
-                                onerror="imageFallback(this, 'X MP 2')"
-                            >
-
-                            <div class="hero-photo-label">
-                                <span>FOTO KELAS</span>
-                                <strong>X MP 2</strong>
-                            </div>
-
-                        </div>
-
+                        <a href="#siswa" class="secondary-btn">
+                            Data Siswa
+                        </a>
                     </div>
 
                 </div>
 
+            </div>
 
-                <!-- QUICK STATS -->
-                <div class="stats">
 
-                    <div class="stat-card">
-                        <div class="stat-icon">☻</div>
-                        <div>
-                            <span>Total Siswa</span>
-                            <strong id="totalStudents">0</strong>
-                        </div>
+            <!-- STATISTICS -->
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <span class="stat-icon">♙</span>
+                    <div>
+                        <small>Total Siswa</small>
+                        <strong id="totalStudents">0</strong>
                     </div>
-
-                    <div class="stat-card">
-                        <div class="stat-icon">♙</div>
-                        <div>
-                            <span>Pengurus</span>
-                            <strong id="totalOfficers">0</strong>
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-icon">◎</div>
-                        <div>
-                            <span>Instagram</span>
-                            <strong>@kelas_xmp2</strong>
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-icon">▣</div>
-                        <div>
-                            <span>Tahun Ajaran</span>
-                            <strong>2026 / 2027</strong>
-                        </div>
-                    </div>
-
                 </div>
 
-
-                <!-- DASHBOARD CONTENT -->
-                <div class="dashboard-grid">
-
-                    <div class="content-card welcome-card">
-
-                        <div class="card-heading">
-                            <div>
-                                <span class="eyebrow">CLASS PROFILE</span>
-                                <h2>X MP 2</h2>
-                            </div>
-
-                            <span class="mini-badge">
-                                AKTIF
-                            </span>
-                        </div>
-
-                        <p>
-                            Website ini dibuat sebagai pusat informasi
-                            digital kelas X MP 2. Semua data siswa,
-                            dokumentasi, agenda, pengumuman, dan informasi
-                            kelas dapat diakses melalui portal ini.
-                        </p>
-
-                        <div class="profile-items">
-
-                            <div>
-                                <span>Jurusan</span>
-                                <strong>MP</strong>
-                            </div>
-
-                            <div>
-                                <span>Kelas</span>
-                                <strong>X MP 2</strong>
-                            </div>
-
-                            <div>
-                                <span>Tahun Ajaran</span>
-                                <strong>2026 / 2027</strong>
-                            </div>
-
-                        </div>
-
+                <div class="stat-card">
+                    <span class="stat-icon">▧</span>
+                    <div>
+                        <small>Dokumentasi</small>
+                        <strong>Gallery</strong>
                     </div>
+                </div>
 
-
-                    <div class="content-card latest-card">
-
-                        <div class="card-heading">
-                            <div>
-                                <span class="eyebrow">TERBARU</span>
-                                <h2>Informasi Kelas</h2>
-                            </div>
-                        </div>
-
-                        <div class="latest-list">
-
-                            <div class="latest-item">
-                                <div class="latest-number">01</div>
-                                <div>
-                                    <strong>Website Kelas Aktif</strong>
-                                    <p>
-                                        Portal resmi X MP 2 sudah dapat
-                                        digunakan.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="latest-item">
-                                <div class="latest-number">02</div>
-                                <div>
-                                    <strong>Data Siswa</strong>
-                                    <p>
-                                        Daftar siswa dapat dilihat pada
-                                        menu Siswa.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="latest-item">
-                                <div class="latest-number">03</div>
-                                <div>
-                                    <strong>Dokumentasi</strong>
-                                    <p>
-                                        Foto kegiatan tersedia di galeri
-                                        kelas.
-                                    </p>
-                                </div>
-                            </div>
-
-                        </div>
-
+                <div class="stat-card">
+                    <span class="stat-icon">◷</span>
+                    <div>
+                        <small>Status</small>
+                        <strong>Aktif</strong>
                     </div>
+                </div>
 
+                <div class="stat-card">
+                    <span class="stat-icon">◎</span>
+                    <div>
+                        <small>Instagram</small>
+                        <strong>@kelas_xmp2</strong>
+                    </div>
                 </div>
 
             </div>
@@ -320,15 +232,76 @@
         <!-- STRUKTUR -->
         <section id="struktur" class="section">
 
-            <div class="section-header">
+            <div class="section-heading">
                 <div>
-                    <span class="eyebrow">ORGANISASI KELAS</span>
+                    <span>ORGANISASI KELAS</span>
                     <h2>Struktur Kelas</h2>
-                    <p>Pengurus kelas X MP 2</p>
                 </div>
             </div>
 
-            <div class="officers" id="officers"></div>
+            <div class="structure-grid">
+
+                <div class="structure-card leader">
+                    <div class="structure-photo">
+                        <img src="foto/siswa1.jpg"
+                             alt="Ketua Kelas"
+                             onerror="imageFallback(this, 'K')">
+                    </div>
+
+                    <div>
+                        <span>01</span>
+                        <h3>Ketua Kelas</h3>
+                        <p>Nama Ketua</p>
+                        <small>X MP 2</small>
+                    </div>
+                </div>
+
+                <div class="structure-card">
+                    <div class="structure-photo">
+                        <img src="foto/siswa2.jpg"
+                             alt="Wakil Ketua"
+                             onerror="imageFallback(this, 'W')">
+                    </div>
+
+                    <div>
+                        <span>02</span>
+                        <h3>Wakil Ketua</h3>
+                        <p>Nama Wakil</p>
+                        <small>X MP 2</small>
+                    </div>
+                </div>
+
+                <div class="structure-card">
+                    <div class="structure-photo">
+                        <img src="foto/siswa3.jpg"
+                             alt="Sekretaris"
+                             onerror="imageFallback(this, 'S')">
+                    </div>
+
+                    <div>
+                        <span>03</span>
+                        <h3>Sekretaris</h3>
+                        <p>Nama Sekretaris</p>
+                        <small>X MP 2</small>
+                    </div>
+                </div>
+
+                <div class="structure-card">
+                    <div class="structure-photo">
+                        <img src="foto/siswa4.jpg"
+                             alt="Bendahara"
+                             onerror="imageFallback(this, 'B')">
+                    </div>
+
+                    <div>
+                        <span>04</span>
+                        <h3>Bendahara</h3>
+                        <p>Nama Bendahara</p>
+                        <small>X MP 2</small>
+                    </div>
+                </div>
+
+            </div>
 
         </section>
 
@@ -336,98 +309,74 @@
         <!-- SISWA -->
         <section id="siswa" class="section">
 
-            <div class="section-header section-header-row">
+            <div class="section-heading">
 
                 <div>
-                    <span class="eyebrow">MEMBERS</span>
-                    <h2>Daftar Siswa</h2>
-                    <p>Data anggota kelas X MP 2</p>
+                    <span>DATA KELAS</span>
+                    <h2>Data Siswa</h2>
                 </div>
 
-                <button class="add-btn" id="addStudentBtn">
+                <button id="addStudentBtn" class="primary-btn">
                     + Tambah Siswa
                 </button>
 
             </div>
 
-
             <div class="search-box">
-
-                <span>⌕</span>
-
                 <input
                     type="text"
-                    id="searchStudent"
+                    id="studentSearch"
                     placeholder="Cari nama siswa..."
                 >
-
             </div>
 
-
-            <div class="students-grid" id="studentsGrid"></div>
+            <div id="studentGrid" class="student-grid"></div>
 
         </section>
 
 
-        <!-- FOTO -->
-        <section id="foto" class="section">
+        <!-- FOTO KELAS -->
+        <section id="foto-kelas" class="section">
 
-            <div class="section-header">
-
+            <div class="section-heading">
                 <div>
-                    <span class="eyebrow">DOCUMENTATION</span>
+                    <span>DOKUMENTASI</span>
                     <h2>Foto Kelas</h2>
-                    <p>Dokumentasi X MP 2</p>
+                </div>
+            </div>
+
+            <div class="gallery-grid">
+
+                <div class="gallery-item large">
+                    <img src="foto/foto-kelas.jpg"
+                         alt="Foto Kelas"
+                         onerror="imageFallback(this, 'Foto Kelas')">
+                </div>
+
+                <div class="gallery-item">
+                    <img src="foto/galeri1.jpg"
+                         alt="Galeri 1"
+                         onerror="imageFallback(this, 'Gallery')">
+                </div>
+
+                <div class="gallery-item">
+                    <img src="foto/galeri2.jpg"
+                         alt="Galeri 2"
+                         onerror="imageFallback(this, 'Gallery')">
+                </div>
+
+                <div class="gallery-item">
+                    <img src="foto/galeri3.jpg"
+                         alt="Galeri 3"
+                         onerror="imageFallback(this, 'Gallery')">
                 </div>
 
             </div>
 
-
-            <div class="gallery">
-
-                <div class="gallery-main">
-                    <img
-                        src="foto/foto-kelas.jpg"
-                        alt="Foto kelas"
-                        onerror="imageFallback(this, 'FOTO KELAS')"
-                    >
-
-                    <div class="gallery-overlay">
-                        <span>CLASS PHOTO</span>
-                        <strong>X MP 2</strong>
-                    </div>
-                </div>
-
-
-                <div class="gallery-small">
-
-                    <div>
-                        <img
-                            src="foto/galeri1.jpg"
-                            alt="Dokumentasi 1"
-                            onerror="imageFallback(this, 'FOTO 01')"
-                        >
-                    </div>
-
-                    <div>
-                        <img
-                            src="foto/galeri2.jpg"
-                            alt="Dokumentasi 2"
-                            onerror="imageFallback(this, 'FOTO 02')"
-                        >
-                    </div>
-
-                    <div>
-                        <img
-                            src="foto/galeri3.jpg"
-                            alt="Dokumentasi 3"
-                            onerror="imageFallback(this, 'FOTO 03')"
-                        >
-                    </div>
-
-                </div>
-
-            </div>
+            <p class="gallery-note">
+                Foto dapat diganti dengan foto kelas atau dokumentasi lainnya
+                melalui folder <strong>foto/</strong>.
+            </p>
 
         </section>
 
@@ -437,24 +386,21 @@
 
             <div class="instagram-card">
 
-                <div class="instagram-logo">
-                    ◎
-                </div>
+                <div class="instagram-icon">◎</div>
 
-                <div class="instagram-content">
-                    <span>INSTAGRAM KELAS</span>
-                    <h2 id="instagramName">@kelas_xmp2</h2>
+                <div>
+                    <span>MEDIA SOSIAL KELAS</span>
+                    <h2>@kelas_xmp2</h2>
                     <p>
                         Ikuti akun Instagram kelas untuk melihat
-                        dokumentasi dan informasi terbaru.
+                        dokumentasi dan aktivitas terbaru.
                     </p>
                 </div>
 
                 <a
-                    id="instagramLink"
                     href="https://instagram.com/"
                     target="_blank"
-                    class="instagram-btn"
+                    class="primary-btn"
                 >
                     Buka Instagram
                 </a>
@@ -467,53 +413,29 @@
         <!-- PENGUMUMAN -->
         <section id="pengumuman" class="section">
 
-            <div class="section-header">
-
+            <div class="section-heading">
                 <div>
-                    <span class="eyebrow">ANNOUNCEMENT</span>
+                    <span>INFORMASI TERBARU</span>
                     <h2>Pengumuman</h2>
-                    <p>Informasi penting untuk seluruh siswa</p>
                 </div>
-
             </div>
 
+            <div class="announcement-card">
 
-            <div class="announcement-list">
+                <div class="announcement-number">
+                    01
+                </div>
 
-                <article class="announcement">
-                    <div class="announcement-icon">!</div>
+                <div>
+                    <span>INFO KELAS</span>
+                    <h3>Selamat datang di Portal X MP 2</h3>
 
-                    <div>
-                        <span class="announcement-date">
-                            INFORMASI KELAS
-                        </span>
-
-                        <h3>Selamat Datang di Portal X MP 2</h3>
-
-                        <p>
-                            Gunakan website ini untuk melihat informasi
-                            dan kegiatan kelas.
-                        </p>
-                    </div>
-                </article>
-
-
-                <article class="announcement">
-                    <div class="announcement-icon">i</div>
-
-                    <div>
-                        <span class="announcement-date">
-                            PENGUMUMAN
-                        </span>
-
-                        <h3>Jaga Kekompakan Kelas</h3>
-
-                        <p>
-                            Mari menjaga kebersamaan, ketertiban,
-                            dan kekompakan X MP 2.
-                        </p>
-                    </div>
-                </article>
+                    <p>
+                        Gunakan website ini untuk melihat informasi
+                        kelas, data siswa, struktur organisasi,
+                        dokumentasi, dan agenda kelas.
+                    </p>
+                </div>
 
             </div>
 
@@ -523,40 +445,36 @@
         <!-- AGENDA -->
         <section id="agenda" class="section">
 
-            <div class="section-header">
-
+            <div class="section-heading">
                 <div>
-                    <span class="eyebrow">SCHEDULE</span>
+                    <span>JADWAL KEGIATAN</span>
                     <h2>Agenda Kelas</h2>
-                    <p>Jadwal kegiatan X MP 2</p>
                 </div>
-
             </div>
 
-
-            <div class="agenda-grid">
+            <div class="agenda-list">
 
                 <div class="agenda-card">
-                    <span class="agenda-day">01</span>
+                    <div class="agenda-date">
+                        <strong>01</strong>
+                        <span>AGENDA</span>
+                    </div>
+
                     <div>
-                        <strong>Kegiatan Kelas</strong>
-                        <p>Informasi kegiatan akan diperbarui.</p>
+                        <h3>Kegiatan Kelas</h3>
+                        <p>Informasi agenda kelas akan ditampilkan di sini.</p>
                     </div>
                 </div>
 
                 <div class="agenda-card">
-                    <span class="agenda-day">02</span>
-                    <div>
-                        <strong>Dokumentasi</strong>
-                        <p>Upload dokumentasi kegiatan kelas.</p>
+                    <div class="agenda-date">
+                        <strong>02</strong>
+                        <span>AGENDA</span>
                     </div>
-                </div>
 
-                <div class="agenda-card">
-                    <span class="agenda-day">03</span>
                     <div>
-                        <strong>Agenda Sekolah</strong>
-                        <p>Ikuti informasi dari sekolah.</p>
+                        <h3>Dokumentasi</h3>
+                        <p>Tambahkan kegiatan atau acara kelas lainnya.</p>
                     </div>
                 </div>
 
@@ -568,37 +486,21 @@
         <!-- INFORMASI -->
         <section id="informasi" class="section">
 
-            <div class="section-header">
+            <div class="info-box">
 
                 <div>
-                    <span class="eyebrow">CLASS INFORMATION</span>
-                    <h2>Informasi Kelas</h2>
-                    <p>Identitas X MP 2</p>
+                    <span>TENTANG WEBSITE</span>
+                    <h2>Portal Kelas X MP 2</h2>
+
+                    <p>
+                        Website ini dibuat sebagai pusat informasi
+                        digital untuk kelas X MP 2.
+                    </p>
                 </div>
 
-            </div>
-
-
-            <div class="info-grid">
-
-                <div class="info-card">
-                    <span>Nama Kelas</span>
-                    <strong>X MP 2</strong>
-                </div>
-
-                <div class="info-card">
-                    <span>Jurusan</span>
-                    <strong>Manajemen Perkantoran</strong>
-                </div>
-
-                <div class="info-card">
-                    <span>Tahun Ajaran</span>
-                    <strong>2026 / 2027</strong>
-                </div>
-
-                <div class="info-card">
-                    <span>Instagram</span>
-                    <strong id="infoInstagram">@kelas_xmp2</strong>
+                <div class="founder-box">
+                    <span>FOUNDER WEBSITE</span>
+                    <strong>NAZUAN AHMAD</strong>
                 </div>
 
             </div>
@@ -607,77 +509,63 @@
 
 
         <!-- FOOTER -->
-        <footer class="footer">
+        <footer>
 
             <div>
                 <strong>X MP 2</strong>
                 <span>Class Portal</span>
             </div>
 
-            <p>
-                © 2026 X MP 2. All rights reserved.
-            </p>
+            <div class="footer-founder">
+                <small>FOUNDER WEBSITE</small>
+                <strong>NAZUAN AHMAD</strong>
+            </div>
+
+            <div>
+                <span>© 2026 X MP 2</span>
+            </div>
 
         </footer>
 
     </main>
 
 
-    <!-- MODAL TAMBAH SISWA -->
-    <div class="modal" id="studentModal">
+    <!-- ADD STUDENT MODAL -->
+    <div id="studentModal" class="modal-overlay hidden">
 
-        <div class="modal-box">
+        <div class="form-modal">
 
-            <button class="modal-close" id="closeModal">
+            <button class="close-modal" id="closeStudentModal">
                 ×
             </button>
 
-            <span class="eyebrow">NEW MEMBER</span>
-
             <h2>Tambah Siswa</h2>
-
-            <p>
-                Tambahkan data siswa baru ke daftar kelas.
-            </p>
+            <p>Masukkan data siswa X MP 2.</p>
 
             <form id="studentForm">
 
-                <label>
-                    Nama Siswa
-                    <input
-                        type="text"
-                        id="studentName"
-                        placeholder="Nama lengkap"
-                        required
-                    >
-                </label>
+                <input
+                    type="text"
+                    id="studentName"
+                    placeholder="Nama siswa"
+                    required
+                >
 
-                <label>
-                    Jabatan
-                    <select id="studentPosition">
-                        <option value="Siswa">Siswa</option>
-                        <option value="Ketua Kelas">Ketua Kelas</option>
-                        <option value="Wakil Ketua">Wakil Ketua</option>
-                        <option value="Sekretaris">Sekretaris</option>
-                        <option value="Bendahara">Bendahara</option>
-                    </select>
-                </label>
+                <input
+                    type="text"
+                    id="studentPosition"
+                    placeholder="Jabatan / Posisi"
+                    value="Siswa"
+                >
 
-                <label>
-                    Nama File Foto
-                    <input
-                        type="text"
-                        id="studentPhoto"
-                        placeholder="contoh: siswa5.jpg"
-                    >
-                    <small>
-                        Foto harus berada di folder
-                        <b>foto/</b>
-                    </small>
-                </label>
+                <input
+                    type="text"
+                    id="studentPhoto"
+                    placeholder="Nama foto, contoh: siswa9.jpg"
+                >
 
-                <button class="submit-btn" type="submit">
-                    Tambahkan
+                <button type="submit" class="primary-btn">
+                    Simpan Siswa
                 </button>
 
             </form>
@@ -690,4 +578,4 @@
     <script src="script.js"></script>
 
 </body>
-</html>
+                            </html>
