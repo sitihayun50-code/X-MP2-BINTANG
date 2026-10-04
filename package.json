@@ -1,0 +1,27 @@
+{
+  "name": "x-mp-2",
+  "version": "1.0.0",
+  "description": "Website resmi kelas X MP 2 dengan dashboard admin",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "x-mp-2",
+    "school",
+    "class-website",
+    "admin-dashboard"
+  ],
+  "author": "NAZUAN AHMAD",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "multer": "^2.0.2",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "sqlite3": "^5.1.7"
+  }
+}
