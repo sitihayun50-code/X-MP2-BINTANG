@@ -1,18 +1,12 @@
 {
   "name": "x-mp-2",
-  "version": "1.0.0",
-  "description": "Website resmi kelas X MP 2 dengan dashboard admin",
+  "version": "2.0.0",
+  "description": "Website resmi kelas X MP 2",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js"
   },
-  "keywords": [
-    "x-mp-2",
-    "school",
-    "class-website",
-    "admin-dashboard"
-  ],
   "author": "NAZUAN AHMAD",
   "license": "MIT",
   "dependencies": {
