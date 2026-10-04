@@ -1,16 +1,14 @@
 const CLASS_NAME = "X MP 2";
 
-const INSTAGRAM_USERNAME = "@kelas_xmp2";
-const INSTAGRAM_URL = "https://instagram.com/";
-
-const STORAGE_KEY = "xmp2_students";
-const THEME_KEY = "xmp2_theme";
+const STORAGE_KEY = "xmp2_students_v2";
+const GALLERY_KEY = "xmp2_gallery_v2";
 const VISITOR_KEY = "xmp2_visitor_name";
+const THEME_KEY = "xmp2_theme";
 
 
-// ================================
-// DATA SISWA
-// ================================
+// =====================================
+// DATA DEFAULT
+// =====================================
 
 const defaultStudents = [
     {
@@ -64,15 +62,42 @@ const defaultStudents = [
 ];
 
 
-// ================================
+const defaultGallery = [
+    {
+        nama: "Foto Kelas",
+        foto: "foto/foto-kelas.jpg"
+    },
+    {
+        nama: "Galeri 1",
+        foto: "foto/galeri1.jpg"
+    },
+    {
+        nama: "Galeri 2",
+        foto: "foto/galeri2.jpg"
+    },
+    {
+        nama: "Galeri 3",
+        foto: "foto/galeri3.jpg"
+    }
+];
+
+
+// =====================================
 // ELEMENT
-// ================================
+// =====================================
 
-const nameModal = document.getElementById("nameModal");
-const visitorNameInput = document.getElementById("visitorNameInput");
-const enterWebsiteBtn = document.getElementById("enterWebsiteBtn");
+const nameModal =
+    document.getElementById("nameModal");
 
-const visitorName = document.getElementById("visitorName");
+const visitorNameInput =
+    document.getElementById("visitorNameInput");
+
+const enterWebsiteBtn =
+    document.getElementById("enterWebsiteBtn");
+
+const visitorName =
+    document.getElementById("visitorName");
+
 const dashboardVisitorName =
     document.getElementById("dashboardVisitorName");
 
@@ -91,14 +116,32 @@ const sidebar =
 const studentGrid =
     document.getElementById("studentGrid");
 
-const totalStudents =
-    document.getElementById("totalStudents");
+const structureGrid =
+    document.getElementById("structureGrid");
 
 const studentSearch =
     document.getElementById("studentSearch");
 
-const addStudentBtn =
-    document.getElementById("addStudentBtn");
+const totalStudents =
+    document.getElementById("totalStudents");
+
+const totalGallery =
+    document.getElementById("totalGallery");
+
+const galleryGrid =
+    document.getElementById("galleryGrid");
+
+const adminStudentList =
+    document.getElementById("adminStudentList");
+
+const adminGalleryList =
+    document.getElementById("adminGalleryList");
+
+const adminAddStudentBtn =
+    document.getElementById("adminAddStudentBtn");
+
+const galleryUpload =
+    document.getElementById("galleryUpload");
 
 const studentModal =
     document.getElementById("studentModal");
@@ -109,19 +152,37 @@ const closeStudentModal =
 const studentForm =
     document.getElementById("studentForm");
 
+const studentModalTitle =
+    document.getElementById("studentModalTitle");
 
-// ================================
+const studentName =
+    document.getElementById("studentName");
+
+const studentPosition =
+    document.getElementById("studentPosition");
+
+const studentClass =
+    document.getElementById("studentClass");
+
+const studentPhotoFile =
+    document.getElementById("studentPhotoFile");
+
+const studentPreview =
+    document.getElementById("studentPreview");
+
+
+// =====================================
 // NAMA PENGUNJUNG
-// ================================
+// =====================================
 
 function loadVisitorName() {
 
-    const savedName =
+    const saved =
         localStorage.getItem(VISITOR_KEY);
 
-    if (savedName) {
+    if (saved) {
 
-        showVisitorName(savedName);
+        showVisitorName(saved);
 
         nameModal.classList.add("hidden");
 
@@ -132,6 +193,7 @@ function loadVisitorName() {
         setTimeout(() => {
             visitorNameInput.focus();
         }, 300);
+
     }
 }
 
@@ -149,6 +211,7 @@ function saveVisitorName() {
             "Nama wajib diisi!";
 
         return;
+
     }
 
     localStorage.setItem(
@@ -161,6 +224,7 @@ function saveVisitorName() {
     nameModal.classList.add("hidden");
 
     visitorNameInput.value = "";
+
 }
 
 
@@ -168,7 +232,9 @@ function showVisitorName(name) {
 
     visitorName.textContent = name;
 
-    dashboardVisitorName.textContent = name;
+    dashboardVisitorName.textContent =
+        name;
+
 }
 
 
@@ -180,7 +246,7 @@ enterWebsiteBtn.addEventListener(
 
 visitorNameInput.addEventListener(
     "keydown",
-    function(event) {
+    event => {
 
         if (event.key === "Enter") {
             saveVisitorName();
@@ -190,19 +256,12 @@ visitorNameInput.addEventListener(
 );
 
 
-// ================================
-// GANTI NAMA
-// ================================
-
 changeNameBtn.addEventListener(
     "click",
-    function() {
-
-        const currentName =
-            localStorage.getItem(VISITOR_KEY);
+    () => {
 
         visitorNameInput.value =
-            currentName || "";
+            localStorage.getItem(VISITOR_KEY) || "";
 
         nameModal.classList.remove("hidden");
 
@@ -215,17 +274,19 @@ changeNameBtn.addEventListener(
 );
 
 
-// ================================
-// DARK MODE
-// ================================
+// =====================================
+// THEME
+// =====================================
 
 function loadTheme() {
 
-    const savedTheme =
-        localStorage.getItem(THEME_KEY);
+    if (
+        localStorage.getItem(THEME_KEY)
+        === "dark"
+    ) {
 
-    if (savedTheme === "dark") {
         document.body.classList.add("dark");
+
     }
 
 }
@@ -233,32 +294,29 @@ function loadTheme() {
 
 themeBtn.addEventListener(
     "click",
-    function() {
+    () => {
 
         document.body.classList.toggle("dark");
 
-        const isDark =
-            document.body.classList.contains("dark");
-
         localStorage.setItem(
             THEME_KEY,
-            isDark ? "dark" : "light"
+            document.body.classList.contains("dark")
+                ? "dark"
+                : "light"
         );
 
     }
 );
 
 
-// ================================
-// MOBILE SIDEBAR
-// ================================
+// =====================================
+// MOBILE MENU
+// =====================================
 
 menuBtn.addEventListener(
     "click",
-    function() {
-
+    () => {
         sidebar.classList.toggle("open");
-
     }
 );
 
@@ -268,11 +326,9 @@ document.querySelectorAll(".nav-link")
 
     link.addEventListener(
         "click",
-        function() {
+        () => {
 
-            if (
-                window.innerWidth <= 800
-            ) {
+            if (window.innerWidth <= 800) {
                 sidebar.classList.remove("open");
             }
 
@@ -282,9 +338,9 @@ document.querySelectorAll(".nav-link")
 });
 
 
-// ================================
-// DATA SISWA
-// ================================
+// =====================================
+// STUDENT STORAGE
+// =====================================
 
 function getStudents() {
 
@@ -296,13 +352,9 @@ function getStudents() {
     }
 
     try {
-
         return JSON.parse(saved);
-
     } catch {
-
         return defaultStudents;
-
     }
 
 }
@@ -318,9 +370,41 @@ function saveStudents(students) {
 }
 
 
-// ================================
+// =====================================
+// GALLERY STORAGE
+// =====================================
+
+function getGallery() {
+
+    const saved =
+        localStorage.getItem(GALLERY_KEY);
+
+    if (!saved) {
+        return defaultGallery;
+    }
+
+    try {
+        return JSON.parse(saved);
+    } catch {
+        return defaultGallery;
+    }
+
+}
+
+
+function saveGallery(gallery) {
+
+    localStorage.setItem(
+        GALLERY_KEY,
+        JSON.stringify(gallery)
+    );
+
+}
+
+
+// =====================================
 // RENDER SISWA
-// ================================
+// =====================================
 
 function renderStudents(
     students = getStudents()
@@ -332,7 +416,7 @@ function renderStudents(
         students.length;
 
 
-    if (students.length === 0) {
+    if (!students.length) {
 
         studentGrid.innerHTML = `
             <div style="
@@ -341,7 +425,7 @@ function renderStudents(
                 padding:40px;
                 color:var(--muted);
             ">
-                Tidak ada data siswa.
+                Belum ada data siswa.
             </div>
         `;
 
@@ -349,74 +433,242 @@ function renderStudents(
     }
 
 
-    students.forEach(
+    students.forEach(student => {
+
+        const card =
+            document.createElement("div");
+
+        card.className =
+            "student-card";
+
+        card.innerHTML = `
+
+            <div class="student-photo">
+
+                <img
+                    src="${safe(student.foto)}"
+                    alt="${safe(student.nama)}"
+                    onerror="imageFallback(this, 'Siswa')"
+                >
+
+            </div>
+
+            <div class="student-info">
+
+                <h3>
+                    ${safe(student.nama)}
+                </h3>
+
+                <p>
+                    ${safe(student.jabatan)}
+                </p>
+
+                <small>
+                    ${safe(student.kelas)}
+                </small>
+
+            </div>
+        `;
+
+        studentGrid.appendChild(card);
+
+    });
+
+}
+
+
+// =====================================
+// STRUKTUR
+// =====================================
+
+function renderStructure() {
+
+    const students =
+        getStudents();
+
+    const structure =
+        students.filter(student =>
+            [
+                "Ketua Kelas",
+                "Wakil Ketua",
+                "Sekretaris",
+                "Bendahara"
+            ].includes(student.jabatan)
+        );
+
+
+    structureGrid.innerHTML = "";
+
+
+    if (!structure.length) {
+
+        structureGrid.innerHTML = `
+            <div style="
+                grid-column:1/-1;
+                color:var(--muted);
+            ">
+                Struktur belum tersedia.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    structure.forEach(
         (student, index) => {
 
             const card =
                 document.createElement("div");
 
             card.className =
-                "student-card";
+                "structure-card";
 
 
             card.innerHTML = `
 
-                <button
-                    class="delete-student"
-                    title="Hapus siswa"
-                    data-index="${index}"
-                >
-                    ×
-                </button>
-
-                <div class="student-photo">
+                <div class="structure-photo">
 
                     <img
-                        src="${escapeHTML(student.foto)}"
-                        alt="${escapeHTML(student.nama)}"
-                        onerror="imageFallback(this, '${escapeHTML(student.nama.charAt(0).toUpperCase())}')"
+                        src="${safe(student.foto)}"
+                        alt="${safe(student.nama)}"
+                        onerror="imageFallback(this, 'X')"
                     >
 
                 </div>
 
-                <div class="student-info">
+                <div>
+
+                    <span>
+                        ${String(index + 1).padStart(2,"0")}
+                    </span>
 
                     <h3>
-                        ${escapeHTML(student.nama)}
+                        ${safe(student.jabatan)}
                     </h3>
 
                     <p>
-                        ${escapeHTML(student.jabatan)}
+                        ${safe(student.nama)}
                     </p>
 
                     <small>
-                        ${CLASS_NAME}
+                        ${safe(student.kelas)}
                     </small>
 
                 </div>
             `;
 
 
-            studentGrid.appendChild(card);
+            structureGrid.appendChild(card);
+
+        }
+    );
+
+}
+
+
+// =====================================
+// ADMIN SISWA
+// =====================================
+
+function renderAdminStudents() {
+
+    const students =
+        getStudents();
+
+    adminStudentList.innerHTML = "";
+
+
+    students.forEach(
+        (student, index) => {
+
+            const row =
+                document.createElement("div");
+
+            row.className =
+                "admin-student";
+
+
+            row.innerHTML = `
+
+                <div class="admin-student-photo">
+
+                    <img
+                        src="${safe(student.foto)}"
+                        alt="${safe(student.nama)}"
+                        onerror="imageFallback(this, 'Siswa')"
+                    >
+
+                </div>
+
+                <div class="admin-student-info">
+
+                    <strong>
+                        ${safe(student.nama)}
+                    </strong>
+
+                    <span>
+                        ${safe(student.jabatan)}
+                        • ${safe(student.kelas)}
+                    </span>
+
+                </div>
+
+                <div class="admin-actions">
+
+                    <button
+                        class="edit-btn"
+                        data-edit="${index}"
+                    >
+                        Edit
+                    </button>
+
+                    <button
+                        class="delete-btn"
+                        data-delete="${index}"
+                    >
+                        Hapus
+                    </button>
+
+                </div>
+            `;
+
+
+            adminStudentList.appendChild(row);
 
         }
     );
 
 
     document.querySelectorAll(
-        ".delete-student"
+        "[data-edit]"
     ).forEach(button => {
 
         button.addEventListener(
             "click",
-            function() {
+            () => {
 
-                const index =
-                    Number(
-                        this.dataset.index
-                    );
+                openEditStudent(
+                    Number(button.dataset.edit)
+                );
 
-                deleteStudent(index);
+            }
+        );
+
+    });
+
+
+    document.querySelectorAll(
+        "[data-delete]"
+    ).forEach(button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                deleteStudent(
+                    Number(button.dataset.delete)
+                );
 
             }
         );
@@ -426,72 +678,31 @@ function renderStudents(
 }
 
 
-// ================================
-// HAPUS SISWA
-// ================================
+// =====================================
+// TAMBAH / EDIT SISWA
+// =====================================
 
-function deleteStudent(index) {
-
-    const students =
-        getStudents();
-
-    if (!confirm(
-        "Hapus data siswa ini?"
-    )) {
-        return;
-    }
-
-    students.splice(index, 1);
-
-    saveStudents(students);
-
-    renderStudents();
-
-}
+let editingStudentIndex = -1;
+let editingPhoto = "";
 
 
-// ================================
-// SEARCH
-// ================================
-
-studentSearch.addEventListener(
-    "input",
-    function() {
-
-        const keyword =
-            this.value.toLowerCase().trim();
-
-        const students =
-            getStudents();
-
-        const filtered =
-            students.filter(student =>
-
-                student.nama
-                    .toLowerCase()
-                    .includes(keyword)
-
-                ||
-
-                student.jabatan
-                    .toLowerCase()
-                    .includes(keyword)
-
-            );
-
-        renderStudents(filtered);
-
-    }
-);
-
-
-// ================================
-// MODAL TAMBAH SISWA
-// ================================
-
-addStudentBtn.addEventListener(
+adminAddStudentBtn.addEventListener(
     "click",
-    function() {
+    () => {
+
+        editingStudentIndex = -1;
+        editingPhoto = "";
+
+        studentModalTitle.textContent =
+            "Tambah Siswa";
+
+        studentForm.reset();
+
+        studentPosition.value =
+            "Siswa";
+
+        studentPreview.style.display =
+            "none";
 
         studentModal.classList.remove(
             "hidden"
@@ -501,9 +712,57 @@ addStudentBtn.addEventListener(
 );
 
 
+function openEditStudent(index) {
+
+    const students =
+        getStudents();
+
+    const student =
+        students[index];
+
+    if (!student) return;
+
+
+    editingStudentIndex =
+        index;
+
+    editingPhoto =
+        student.foto;
+
+
+    studentModalTitle.textContent =
+        "Edit Siswa";
+
+
+    studentName.value =
+        student.nama;
+
+    studentPosition.value =
+        student.jabatan;
+
+    studentClass.value =
+        student.kelas;
+
+
+    studentPreview.innerHTML = `
+        <img src="${safe(student.foto)}"
+             alt="Preview">
+    `;
+
+    studentPreview.style.display =
+        "block";
+
+
+    studentModal.classList.remove(
+        "hidden"
+    );
+
+}
+
+
 closeStudentModal.addEventListener(
     "click",
-    function() {
+    () => {
 
         studentModal.classList.add(
             "hidden"
@@ -515,9 +774,11 @@ closeStudentModal.addEventListener(
 
 studentModal.addEventListener(
     "click",
-    function(event) {
+    event => {
 
-        if (event.target === studentModal) {
+        if (
+            event.target === studentModal
+        ) {
 
             studentModal.classList.add(
                 "hidden"
@@ -529,49 +790,98 @@ studentModal.addEventListener(
 );
 
 
-// ================================
-// TAMBAH SISWA
-// ================================
+// =====================================
+// PREVIEW FOTO SISWA
+// =====================================
+
+studentPhotoFile.addEventListener(
+    "change",
+    function() {
+
+        const file =
+            this.files[0];
+
+        if (!file) return;
+
+
+        if (!file.type.startsWith("image/")) {
+
+            alert(
+                "File harus berupa gambar."
+            );
+
+            this.value = "";
+
+            return;
+
+        }
+
+
+        const reader =
+            new FileReader();
+
+
+        reader.onload =
+            event => {
+
+                editingPhoto =
+                    event.target.result;
+
+                studentPreview.innerHTML = `
+                    <img
+                        src="${event.target.result}"
+                        alt="Preview"
+                    >
+                `;
+
+                studentPreview.style.display =
+                    "block";
+
+            };
+
+
+        reader.readAsDataURL(file);
+
+    }
+);
+
+
+// =====================================
+// SIMPAN SISWA
+// =====================================
 
 studentForm.addEventListener(
     "submit",
-    function(event) {
+    event => {
 
         event.preventDefault();
 
 
         const nama =
-            document.getElementById(
-                "studentName"
-            ).value.trim();
+            studentName.value.trim();
 
         const jabatan =
-            document.getElementById(
-                "studentPosition"
-            ).value.trim() || "Siswa";
+            studentPosition.value.trim();
 
-        let foto =
-            document.getElementById(
-                "studentPhoto"
-            ).value.trim();
+        const kelas =
+            studentClass.value;
 
 
         if (!nama) {
+
+            alert(
+                "Nama siswa wajib diisi."
+            );
+
             return;
+
         }
 
 
-        if (!foto) {
+        if (!editingPhoto) {
 
-            foto =
+            editingPhoto =
                 "foto/default.jpg";
-
-        } else if (
-            !foto.startsWith("foto/")
-        ) {
-
-            foto =
-                "foto/" + foto;
 
         }
 
@@ -580,44 +890,344 @@ studentForm.addEventListener(
             getStudents();
 
 
-        students.push({
+        const data = {
 
-            nama: nama,
+            nama,
+            jabatan: jabatan || "Siswa",
+            kelas,
+            foto: editingPhoto
 
-            jabatan: jabatan,
+        };
 
-            kelas: CLASS_NAME,
 
-            foto: foto
+        if (editingStudentIndex === -1) {
 
-        });
+            students.push(data);
+
+        } else {
+
+            students[editingStudentIndex] =
+                data;
+
+        }
 
 
         saveStudents(students);
 
+
         renderStudents();
-
-
-        studentForm.reset();
-
-        document.getElementById(
-            "studentPosition"
-        ).value = "Siswa";
+        renderStructure();
+        renderAdminStudents();
 
 
         studentModal.classList.add(
             "hidden"
         );
 
+
+        editingStudentIndex = -1;
+        editingPhoto = "";
+
     }
 );
 
 
-// ================================
-// ESCAPE HTML
-// ================================
+// =====================================
+// HAPUS SISWA
+// =====================================
 
-function escapeHTML(value) {
+function deleteStudent(index) {
+
+    const students =
+        getStudents();
+
+
+    if (!confirm(
+        `Hapus siswa "${students[index].nama}"?`
+    )) {
+
+        return;
+
+    }
+
+
+    students.splice(index, 1);
+
+    saveStudents(students);
+
+
+    renderStudents();
+    renderStructure();
+    renderAdminStudents();
+
+}
+
+
+// =====================================
+// SEARCH
+// =====================================
+
+studentSearch.addEventListener(
+    "input",
+    function() {
+
+        const keyword =
+            this.value
+                .toLowerCase()
+                .trim();
+
+
+        const filtered =
+            getStudents().filter(
+                student =>
+
+                    student.nama
+                        .toLowerCase()
+                        .includes(keyword)
+
+                    ||
+
+                    student.jabatan
+                        .toLowerCase()
+                        .includes(keyword)
+            );
+
+
+        renderStudents(filtered);
+
+    }
+);
+
+
+// =====================================
+// GALERI
+// =====================================
+
+function renderGallery() {
+
+    const gallery =
+        getGallery();
+
+    galleryGrid.innerHTML = "";
+
+    totalGallery.textContent =
+        gallery.length;
+
+
+    gallery.forEach(photo => {
+
+        const item =
+            document.createElement("div");
+
+        item.className =
+            "gallery-item";
+
+
+        item.innerHTML = `
+            <img
+                src="${safe(photo.foto)}"
+                alt="${safe(photo.nama)}"
+                onerror="imageFallback(this, 'Gallery')"
+            >
+        `;
+
+
+        galleryGrid.appendChild(item);
+
+    });
+
+}
+
+
+// =====================================
+// ADMIN GALERI
+// =====================================
+
+function renderAdminGallery() {
+
+    const gallery =
+        getGallery();
+
+    adminGalleryList.innerHTML = "";
+
+
+    gallery.forEach(
+        (photo, index) => {
+
+            const item =
+                document.createElement("div");
+
+            item.className =
+                "admin-gallery-item";
+
+
+            item.innerHTML = `
+
+                <div class="admin-gallery-image">
+
+                    <img
+                        src="${safe(photo.foto)}"
+                        alt="${safe(photo.nama)}"
+                    >
+
+                </div>
+
+                <div class="admin-gallery-name">
+                    ${safe(photo.nama)}
+                </div>
+
+                <button
+                    class="delete-btn"
+                    data-gallery-delete="${index}"
+                >
+                    Hapus Foto
+                </button>
+            `;
+
+
+            adminGalleryList.appendChild(item);
+
+        }
+    );
+
+
+    document.querySelectorAll(
+        "[data-gallery-delete]"
+    ).forEach(button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                deleteGallery(
+                    Number(
+                        button.dataset.galleryDelete
+                    )
+                );
+
+            }
+        );
+
+    });
+
+}
+
+
+// =====================================
+// UPLOAD GALERI
+// =====================================
+
+galleryUpload.addEventListener(
+    "change",
+    function() {
+
+        const files =
+            Array.from(this.files);
+
+
+        if (!files.length) return;
+
+
+        const gallery =
+            getGallery();
+
+
+        let completed = 0;
+
+
+        files.forEach(file => {
+
+            if (
+                !file.type.startsWith("image/")
+            ) {
+
+                completed++;
+
+                return;
+
+            }
+
+
+            const reader =
+                new FileReader();
+
+
+            reader.onload =
+                event => {
+
+                    gallery.push({
+
+                        nama:
+                            file.name,
+
+                        foto:
+                            event.target.result
+
+                    });
+
+
+                    completed++;
+
+
+                    if (
+                        completed === files.length
+                    ) {
+
+                        saveGallery(gallery);
+
+                        renderGallery();
+                        renderAdminGallery();
+
+                        galleryUpload.value = "";
+
+                    }
+
+                };
+
+
+            reader.readAsDataURL(file);
+
+        });
+
+    }
+);
+
+
+// =====================================
+// HAPUS GALERI
+// =====================================
+
+function deleteGallery(index) {
+
+    const gallery =
+        getGallery();
+
+
+    if (!confirm(
+        "Hapus foto galeri ini?"
+    )) {
+
+        return;
+
+    }
+
+
+    gallery.splice(index, 1);
+
+    saveGallery(gallery);
+
+
+    renderGallery();
+    renderAdminGallery();
+
+}
+
+
+// =====================================
+// ESCAPE HTML
+// =====================================
+
+function safe(value) {
 
     return String(value)
         .replaceAll("&", "&amp;")
@@ -629,23 +1239,25 @@ function escapeHTML(value) {
 }
 
 
-// ================================
-// FOTO FALLBACK
-// ================================
+// =====================================
+// IMAGE FALLBACK
+// =====================================
 
 function imageFallback(
     image,
     text = "X MP 2"
 ) {
 
-    image.style.display = "none";
+    image.style.display =
+        "none";
+
 
     const parent =
         image.parentElement;
 
-    if (!parent) {
-        return;
-    }
+
+    if (!parent) return;
+
 
     parent.style.display =
         "flex";
@@ -662,29 +1274,15 @@ function imageFallback(
     parent.style.fontWeight =
         "bold";
 
-    parent.style.fontSize =
-        "13px";
-
     parent.innerHTML =
-        `<span>${escapeHTML(text)}</span>`;
+        `<span>${safe(text)}</span>`;
 
 }
 
 
-// ================================
-// INIT
-// ================================
-
-loadTheme();
-
-loadVisitorName();
-
-renderStudents();
-
-
-// ================================
+// =====================================
 // ACTIVE NAV
-// ================================
+// =====================================
 
 const sections =
     document.querySelectorAll(
@@ -699,24 +1297,23 @@ const navLinks =
 
 window.addEventListener(
     "scroll",
-    function() {
+    () => {
 
         let current = "";
 
+
         sections.forEach(section => {
 
-            const sectionTop =
+            const top =
                 section.offsetTop - 130;
 
+
             if (
-                window.scrollY >=
-                sectionTop
+                window.scrollY >= top
             ) {
 
                 current =
-                    section.getAttribute(
-                        "id"
-                    );
+                    section.id;
 
             }
 
@@ -729,9 +1326,10 @@ window.addEventListener(
                 "active"
             );
 
+
             if (
-                link.getAttribute("href") ===
-                "#" + current
+                link.getAttribute("href")
+                === "#" + current
             ) {
 
                 link.classList.add(
@@ -744,3 +1342,22 @@ window.addEventListener(
 
     }
 );
+
+
+// =====================================
+// INIT
+// =====================================
+
+loadTheme();
+
+loadVisitorName();
+
+renderStudents();
+
+renderStructure();
+
+renderGallery();
+
+renderAdminStudents();
+
+renderAdminGallery();
