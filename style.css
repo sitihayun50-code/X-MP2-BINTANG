@@ -18,7 +18,8 @@ html {
     --accent-text: #ffffff;
     --sidebar: #ffffff;
     --input: #f7f7f8;
-    --shadow: 0 12px 35px rgba(0, 0, 0, .07);
+    --danger: #dc2626;
+    --shadow: 0 12px 35px rgba(0,0,0,.07);
 }
 
 body.dark {
@@ -31,7 +32,7 @@ body.dark {
     --accent-text: #111318;
     --sidebar: #14161a;
     --input: #202228;
-    --shadow: 0 12px 35px rgba(0, 0, 0, .25);
+    --shadow: 0 12px 35px rgba(0,0,0,.25);
 }
 
 body {
@@ -48,7 +49,8 @@ a {
 }
 
 button,
-input {
+input,
+select {
     font: inherit;
 }
 
@@ -140,6 +142,12 @@ button {
     color: var(--accent-text);
 }
 
+.admin-link {
+    margin-top: 8px;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+}
+
 .sidebar-bottom {
     margin-top: auto;
 }
@@ -208,7 +216,8 @@ button {
 .section-heading span,
 .instagram-card span,
 .info-box span,
-.announcement-card span {
+.announcement-card span,
+.admin-panel-header span {
     color: var(--muted);
     font-size: 9px;
     letter-spacing: 2px;
@@ -295,6 +304,10 @@ button {
     transform: translateY(-2px);
 }
 
+.full {
+    width: 100%;
+}
+
 
 /* HERO */
 
@@ -344,10 +357,6 @@ button {
     line-height: 1.08;
 }
 
-.hero h2 strong {
-    font-weight: 800;
-}
-
 .hero p {
     color: var(--muted);
     max-width: 500px;
@@ -384,7 +393,7 @@ button {
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4,1fr);
     gap: 15px;
     margin-top: 20px;
 }
@@ -429,7 +438,7 @@ button {
 
 .structure-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2,1fr);
     gap: 15px;
 }
 
@@ -441,10 +450,6 @@ button {
     display: flex;
     align-items: center;
     gap: 18px;
-}
-
-.structure-card:hover {
-    box-shadow: var(--shadow);
 }
 
 .structure-photo {
@@ -488,9 +493,7 @@ button {
     margin-bottom: 20px;
 }
 
-.search-box input,
-.form-modal input,
-.name-modal input {
+.search-box input {
     width: 100%;
     border: 1px solid var(--border);
     background: var(--input);
@@ -500,18 +503,12 @@ button {
     outline: none;
 }
 
-.search-box input:focus,
-.form-modal input:focus,
-.name-modal input:focus {
-    border-color: var(--text);
-}
-
 
 /* STUDENTS */
 
 .student-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4,1fr);
     gap: 15px;
 }
 
@@ -520,7 +517,6 @@ button {
     border: 1px solid var(--border);
     border-radius: 15px;
     overflow: hidden;
-    position: relative;
 }
 
 .student-photo {
@@ -545,7 +541,6 @@ button {
 .student-info p {
     color: var(--muted);
     font-size: 12px;
-    margin-top: 3px;
 }
 
 .student-info small {
@@ -555,36 +550,20 @@ button {
     font-size: 10px;
 }
 
-.delete-student {
-    position: absolute;
-    right: 10px;
-    top: 10px;
-    width: 30px;
-    height: 30px;
-    border: 0;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, .7);
-    color: white;
-}
-
 
 /* GALLERY */
 
 .gallery-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr;
-    grid-auto-rows: 220px;
+    grid-template-columns: repeat(3,1fr);
     gap: 12px;
 }
 
 .gallery-item {
+    height: 250px;
     overflow: hidden;
     border-radius: 15px;
     background: var(--input);
-}
-
-.gallery-item.large {
-    grid-row: span 2;
 }
 
 .gallery-item img {
@@ -636,7 +615,6 @@ button {
 .instagram-card p {
     color: var(--muted);
     font-size: 13px;
-    margin-top: 5px;
 }
 
 .instagram-card .primary-btn {
@@ -709,16 +687,6 @@ button {
 .agenda-date span {
     font-size: 8px;
     color: var(--muted);
-    letter-spacing: 1px;
-}
-
-.agenda-card h3 {
-    font-size: 16px;
-}
-
-.agenda-card p {
-    color: var(--muted);
-    font-size: 12px;
 }
 
 
@@ -759,6 +727,163 @@ button {
 }
 
 
+/* ADMIN */
+
+.admin-section {
+    border-top: 1px solid var(--border);
+}
+
+.admin-status {
+    background: var(--input);
+    padding: 7px 12px;
+    border-radius: 20px;
+    font-size: 9px !important;
+    letter-spacing: 1px;
+}
+
+.admin-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px;
+    margin-bottom: 18px;
+}
+
+.admin-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.admin-panel-header h3 {
+    margin-top: 4px;
+    font-size: 18px;
+}
+
+.admin-list {
+    display: grid;
+    gap: 10px;
+}
+
+.admin-student {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px;
+}
+
+.admin-student-photo {
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--input);
+    flex-shrink: 0;
+}
+
+.admin-student-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.admin-student-info {
+    flex: 1;
+}
+
+.admin-student-info strong,
+.admin-student-info span {
+    display: block;
+}
+
+.admin-student-info span {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 7px;
+}
+
+.edit-btn,
+.delete-btn {
+    border: 1px solid var(--border);
+    background: var(--input);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 11px;
+    font-size: 11px;
+}
+
+.delete-btn {
+    color: var(--danger);
+}
+
+.admin-gallery-list {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 12px;
+}
+
+.admin-gallery-item {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--input);
+}
+
+.admin-gallery-image {
+    height: 160px;
+}
+
+.admin-gallery-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.admin-gallery-name {
+    padding: 10px;
+    font-size: 11px;
+    color: var(--muted);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.admin-gallery-item button {
+    margin: 0 10px 10px;
+    width: calc(100% - 20px);
+}
+
+.admin-info {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+}
+
+.admin-info strong,
+.admin-info span {
+    display: block;
+}
+
+.admin-info span {
+    font-size: 18px;
+    margin-top: 3px;
+}
+
+.admin-info p {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 8px;
+}
+
+
 /* FOOTER */
 
 footer {
@@ -774,10 +899,6 @@ footer {
 footer strong {
     display: block;
     color: var(--text);
-}
-
-footer span {
-    display: block;
 }
 
 .footer-founder {
@@ -796,7 +917,7 @@ footer span {
 .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, .65);
+    background: rgba(0,0,0,.65);
     backdrop-filter: blur(7px);
     display: flex;
     align-items: center;
@@ -812,12 +933,12 @@ footer span {
 .name-modal,
 .form-modal {
     position: relative;
-    width: min(430px, 100%);
+    width: min(430px,100%);
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 20px;
     padding: 35px;
-    box-shadow: 0 25px 80px rgba(0, 0, 0, .25);
+    box-shadow: 0 25px 80px rgba(0,0,0,.25);
 }
 
 .name-modal {
@@ -842,12 +963,20 @@ footer span {
     margin: 8px 0 22px;
 }
 
-.name-modal input {
-    margin-bottom: 12px;
+.name-modal input,
+.form-modal input,
+.form-modal select {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: var(--input);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 13px 15px;
+    outline: none;
+    margin-bottom: 10px;
 }
 
 .name-modal .primary-btn {
-    width: 100%;
     border: 0;
 }
 
@@ -856,15 +985,6 @@ footer span {
     color: var(--muted);
     font-size: 9px;
     margin-top: 15px;
-}
-
-.form-modal input {
-    margin-bottom: 10px;
-}
-
-.form-modal .primary-btn {
-    width: 100%;
-    margin-top: 5px;
 }
 
 .close-modal {
@@ -877,17 +997,50 @@ footer span {
     font-size: 27px;
 }
 
+.file-input-label {
+    display: block;
+    border: 1px dashed var(--border);
+    background: var(--input);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    margin-bottom: 10px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 12px;
+}
 
-/* RESPONSIVE */
+.file-input-label input {
+    display: none;
+}
 
-@media (max-width: 1100px) {
+.image-preview {
+    display: none;
+    width: 100%;
+    height: 160px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    background: var(--input);
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+
+/* MOBILE */
+
+@media(max-width:1100px) {
 
     .student-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(3,1fr);
     }
 
     .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2,1fr);
     }
 
     .hero {
@@ -899,21 +1052,17 @@ footer span {
         min-height: 350px;
     }
 
-    .gallery-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .gallery-item.large {
-        grid-row: auto;
+    .admin-gallery-list {
+        grid-template-columns: repeat(3,1fr);
     }
 }
 
-@media (max-width: 800px) {
+
+@media(max-width:800px) {
 
     .sidebar {
         transform: translateX(-100%);
         transition: .25s;
-        box-shadow: var(--shadow);
     }
 
     .sidebar.open {
@@ -933,8 +1082,8 @@ footer span {
     }
 
     .page-title {
-        margin-right: auto;
         margin-left: 15px;
+        margin-right: auto;
     }
 
     .section {
@@ -945,12 +1094,8 @@ footer span {
         padding: 35px 25px;
     }
 
-    .hero h2 {
-        font-size: 34px;
-    }
-
     .student-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2,1fr);
     }
 
     .structure-grid {
@@ -967,8 +1112,8 @@ footer span {
         margin-left: 0;
     }
 
-    .founder-box {
-        width: 100%;
+    .admin-gallery-list {
+        grid-template-columns: repeat(2,1fr);
     }
 
     footer {
@@ -978,7 +1123,8 @@ footer span {
     }
 }
 
-@media (max-width: 520px) {
+
+@media(max-width:520px) {
 
     .visitor-box {
         display: none;
@@ -990,13 +1136,13 @@ footer span {
         grid-template-columns: 1fr;
     }
 
-    .gallery-grid {
-        grid-auto-rows: 230px;
-    }
-
     .hero-image {
         height: 250px;
         min-height: 250px;
+    }
+
+    .hero h2 {
+        font-size: 34px;
     }
 
     .hero-buttons {
@@ -1008,8 +1154,26 @@ footer span {
         flex-direction: column;
     }
 
-    .section-heading .primary-btn {
+    .admin-panel-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .admin-panel-header .primary-btn,
+    .upload-label {
         width: 100%;
+    }
+
+    .admin-gallery-list {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-student {
+        align-items: flex-start;
+    }
+
+    .admin-actions {
+        flex-direction: column;
     }
 
     .name-modal,
