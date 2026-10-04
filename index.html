@@ -3,219 +3,272 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>X MP 2</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="description" content="Website resmi kelas X MP 2">
+  <title>X MP 2 — NAZUAN AHMAD</title>
+
+  <link rel="stylesheet" href="/style.css">
 </head>
 
 <body>
 
-<nav class="navbar">
-  <div class="brand">
-    <strong>X MP 2</strong>
-    <span>Official Class Website</span>
-  </div>
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="#beranda" class="brand">
+        <span class="brand-logo">X</span>
+        <span>
+          <strong>X MP 2</strong>
+          <small>CLASS WEBSITE</small>
+        </span>
+      </a>
 
-  <div class="nav-links">
-    <a href="#beranda">Beranda</a>
-    <a href="#siswa">Daftar Siswa</a>
-    <a href="#galeri">Galeri</a>
-    <a href="#pengumuman">Pengumuman</a>
-    <a href="#agenda">Agenda</a>
-    <button id="loginButton">Login Admin</button>
-  </div>
-</nav>
+      <button id="menuBtn" class="menu-btn" type="button">
+        ☰
+      </button>
 
-<header id="beranda" class="hero">
-  <div class="hero-content">
-    <span class="badge">OFFICIAL CLASS</span>
-    <h1 id="heroClassName">X MP 2</h1>
-    <p>
-      Website resmi kelas
-      <strong id="heroFounder">NAZUAN AHMAD</strong>
-    </p>
+      <nav id="mainNav">
+        <a href="#beranda">Beranda</a>
+        <a href="#siswa">Daftar Siswa</a>
+        <a href="#galeri">Galeri</a>
+        <a href="#pengumuman">Pengumuman</a>
+        <a href="#agenda">Agenda</a>
+        <a href="#admin">Dashboard Admin</a>
+      </nav>
+    </div>
+  </header>
 
-    <a href="#siswa" class="hero-button">Lihat Kelas</a>
-  </div>
-</header>
+  <main>
 
-<main>
+    <!-- HERO -->
+    <section id="beranda" class="hero">
+      <div class="hero-content">
+        <div class="badge">OFFICIAL CLASS WEBSITE</div>
 
-  <!-- SISWA -->
-  <section id="siswa">
-    <div class="section-title">
-      <div>
-        <span class="mini-title">CLASS MEMBER</span>
-        <h2>Daftar Siswa</h2>
+        <h1>X MP 2</h1>
+
+        <p>
+          Website resmi kelas X MP 2 untuk informasi siswa,
+          galeri, pengumuman, dan agenda kelas.
+        </p>
+
+        <div class="hero-buttons">
+          <a href="#siswa" class="btn primary">Lihat Siswa</a>
+          <a href="#pengumuman" class="btn secondary">Pengumuman</a>
+        </div>
+
+        <div class="founder">
+          Website Founder
+          <strong>NAZUAN AHMAD</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- SISWA -->
+    <section id="siswa" class="section">
+      <div class="section-heading">
+        <span>01</span>
+        <div>
+          <h2>Daftar Siswa</h2>
+          <p>Daftar anggota kelas X MP 2.</p>
+        </div>
       </div>
 
-      <span id="studentCount" class="count">0 Siswa</span>
-    </div>
-
-    <div id="studentList" class="student-grid">
-      <p class="empty">Memuat data...</p>
-    </div>
-  </section>
-
-  <!-- GALERI -->
-  <section id="galeri">
-    <div class="section-title">
-      <div>
-        <span class="mini-title">MEMORIES</span>
-        <h2>Galeri</h2>
-      </div>
-    </div>
-
-    <div id="galleryList" class="gallery-grid">
-      <p class="empty">Memuat galeri...</p>
-    </div>
-  </section>
-
-  <!-- PENGUMUMAN -->
-  <section id="pengumuman">
-    <div class="section-title">
-      <div>
-        <span class="mini-title">INFORMATION</span>
-        <h2>Pengumuman</h2>
-      </div>
-    </div>
-
-    <div id="announcementList">
-      <p class="empty">Memuat pengumuman...</p>
-    </div>
-  </section>
-
-  <!-- AGENDA -->
-  <section id="agenda">
-    <div class="section-title">
-      <div>
-        <span class="mini-title">SCHEDULE</span>
-        <h2>Agenda</h2>
-      </div>
-    </div>
-
-    <div id="agendaList">
-      <p class="empty">Memuat agenda...</p>
-    </div>
-  </section>
-
-  <!-- ADMIN -->
-  <section id="adminDashboard" class="admin-section hidden">
-
-    <div class="admin-header">
-      <div>
-        <span class="mini-title">ADMIN AREA</span>
-        <h2>Dashboard Admin</h2>
-        <p id="adminInfo">Belum login</p>
+      <div id="studentLoading" class="loading">
+        Memuat data siswa...
       </div>
 
-      <button id="logoutButton" class="danger-button">
-        Logout
-      </button>
-    </div>
+      <div id="studentList" class="student-grid"></div>
 
-    <!-- TAB -->
-    <div class="admin-tabs">
+      <div id="studentEmpty" class="empty hidden">
+        Belum ada data siswa.
+      </div>
+    </section>
 
-      <button data-tab="students" class="active">
-        Kelola Siswa
-      </button>
+    <!-- GALERI -->
+    <section id="galeri" class="section section-alt">
+      <div class="section-heading">
+        <span>02</span>
+        <div>
+          <h2>Galeri</h2>
+          <p>Dokumentasi kegiatan X MP 2.</p>
+        </div>
+      </div>
 
-      <button data-tab="photos">
-        Upload Foto
-      </button>
+      <div id="galleryLoading" class="loading">
+        Memuat galeri...
+      </div>
 
-      <button data-tab="gallery">
-        Kelola Galeri
-      </button>
+      <div id="galleryList" class="gallery-grid"></div>
 
-      <button data-tab="announcements">
-        Pengumuman
-      </button>
+      <div id="galleryEmpty" class="empty hidden">
+        Belum ada foto galeri.
+      </div>
+    </section>
 
-      <button data-tab="agenda">
-        Agenda
-      </button>
+    <!-- PENGUMUMAN -->
+    <section id="pengumuman" class="section">
+      <div class="section-heading">
+        <span>03</span>
+        <div>
+          <h2>Pengumuman</h2>
+          <p>Informasi terbaru untuk siswa.</p>
+        </div>
+      </div>
 
-      <button data-tab="settings">
-        Pengaturan
-      </button>
+      <div id="announcementLoading" class="loading">
+        Memuat pengumuman...
+      </div>
 
-      <button data-tab="admins">
-        Kelola Admin
-      </button>
+      <div id="announcementList" class="announcement-list"></div>
 
-    </div>
+      <div id="announcementEmpty" class="empty hidden">
+        Belum ada pengumuman.
+      </div>
+    </section>
 
-    <!-- TAB SISWA -->
-    <div id="tab-students" class="admin-tab">
+    <!-- AGENDA -->
+    <section id="agenda" class="section section-alt">
+      <div class="section-heading">
+        <span>04</span>
+        <div>
+          <h2>Agenda</h2>
+          <p>Jadwal dan kegiatan kelas.</p>
+        </div>
+      </div>
 
-      <div class="admin-card">
+      <div id="agendaLoading" class="loading">
+        Memuat agenda...
+      </div>
 
-        <h3>Tambah Siswa</h3>
+      <div id="agendaList" class="agenda-list"></div>
 
-        <form id="studentForm">
+      <div id="agendaEmpty" class="empty hidden">
+        Belum ada agenda.
+      </div>
+    </section>
 
-          <label>Nama</label>
-          <input
-            type="text"
-            name="name"
-            placeholder="Nama siswa"
-            required
-          >
+    <!-- ADMIN -->
+    <section id="admin" class="section admin-section">
 
-          <label>Jabatan</label>
-          <input
-            type="text"
-            name="position"
-            placeholder="Contoh: Ketua Kelas"
-          >
+      <div class="section-heading">
+        <span>05</span>
+        <div>
+          <h2>Dashboard Admin</h2>
+          <p>Kelola seluruh informasi kelas.</p>
+        </div>
+      </div>
 
-          <label>Foto</label>
-          <input
-            type="file"
-            name="photo"
-            accept="image/*"
-          >
+      <!-- LOGIN -->
+      <div id="loginBox" class="admin-login">
+        <h3>Login Admin</h3>
+        <p>
+          Login menggunakan akun Google yang sudah terdaftar
+          sebagai admin.
+        </p>
 
-          <button type="submit">
-            Tambah Siswa
+        <button id="googleLoginBtn" class="btn primary" type="button">
+          Login dengan Google
+        </button>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div id="dashboard" class="dashboard hidden">
+
+        <div class="admin-top">
+          <div>
+            <span class="admin-label">LOGIN SEBAGAI</span>
+            <h3 id="adminName">Admin</h3>
+            <p id="adminEmail"></p>
+            <span id="adminRole" class="role-badge">ADMIN</span>
+          </div>
+
+          <button id="logoutBtn" class="btn danger" type="button">
+            Logout
+          </button>
+        </div>
+
+        <!-- TABS -->
+        <div class="admin-tabs">
+
+          <button class="tab active" data-tab="students">
+            Siswa
           </button>
 
-        </form>
+          <button class="tab" data-tab="photos">
+            Upload Foto
+          </button>
 
-      </div>
+          <button class="tab" data-tab="gallery">
+            Galeri
+          </button>
 
-      <div class="admin-card">
+          <button class="tab" data-tab="announcements">
+            Pengumuman
+          </button>
 
-        <h3>Data Siswa</h3>
+          <button class="tab" data-tab="agenda">
+            Agenda
+          </button>
 
-        <div id="adminStudents"></div>
+          <button class="tab" data-tab="settings">
+            Pengaturan
+          </button>
 
-      </div>
+          <button class="tab owner-only" data-tab="admins">
+            Kelola Admin
+          </button>
 
-    </div>
+        </div>
 
-    <!-- TAB FOTO -->
-    <div id="tab-photos" class="admin-tab hidden">
+        <!-- TAB SISWA -->
+        <div id="tab-students" class="tab-content active">
 
-      <div class="admin-card">
+          <div class="admin-card">
+            <h3>Tambah Siswa</h3>
 
-        <h3>Upload Foto</h3>
+            <form id="studentForm">
 
-        <form id="photoForm">
+              <div class="form-grid">
 
-          <label>Nama Foto</label>
+                <div class="form-group">
+                  <label>Nama Siswa</label>
+                  <input
+                    type="text"
+                    id="studentName"
+                    required
+                    maxlength="100"
+                    placeholder="Nama lengkap"
+                  >
+                </div>
 
-          <input
-            type="text"
-            name="name"
-            placeholder="Contoh: Foto Bersama"
-            required
-          >
+                <div class="form-group">
+                  <label>Keterangan</label>
+                  <input
+                    type="text"
+                    id="studentInfo"
+                    maxlength="100"
+                    placeholder="Contoh: Ketua Kelas"
+                  >
+                </div>
 
-          <label>File</label>
+              </div>
 
-          <input
-            type="file"
-            name="photo"
-           
+              <div class="form-group">
+                <label>Foto Siswa</label>
+                <input
+                  type="file"
+                  id="studentPhoto"
+                  accept="image/*"
+                >
+              </div>
+
+              <button class="btn primary" type="submit">
+                Tambah Siswa
+              </button>
+
+            </form>
+          </div>
+
+          <div class="admin-card">
+            <h3>Data Siswa</h3>
+            <div id="admin
