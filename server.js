@@ -2,94 +2,126 @@ require("dotenv").config();
 
 const express = require("express");
 const session = require("express-session");
-const passport = require("passport");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const multer = require("multer");
 const sqlite3 = require("sqlite3").verbose();
+const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
 const app = express();
 
-const PORT = process.env.PORT || 3000;
-const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+const PORT = Number(process.env.PORT || 3000);
+
+const ADMIN_USERNAME =
+  process.env.ADMIN_USERNAME || "admin123";
+
+const ADMIN_PASSWORD =
+  process.env.ADMIN_PASSWORD || "admin";
+
+const SESSION_SECRET =
+  process.env.SESSION_SECRET ||
+  "x-mp-2-secret";
 
 const OWNER_EMAIL =
-  (process.env.OWNER_EMAIL || "nazuanahmad070@gmail.com")
-    .toLowerCase()
-    .trim();
+  process.env.OWNER_EMAIL ||
+  "nazuanahmad070@gmail.com";
 
-const UPLOAD_DIR = path.join(__dirname, "uploads");
+const ROOT = __dirname;
+const UPLOAD_DIR = path.join(ROOT, "uploads");
+const DB_FILE = path.join(ROOT, "database.db");
 
 if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, {
-    recursive: true
-  });
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
-const db = new sqlite3.Database(
-  path.join(__dirname, "database.db")
-);
-
-app.use(express.json());
-app.use(express.urlencoded({
-  extended: true
-}));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
 
 app.use(
   session({
-    secret:
-      process.env.SESSION_SECRET ||
-      "x-mp-2-local-secret-change-this",
+    secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
-      maxAge: 1000 * 60 * 60 * 24 * 7
+      httpOnly: true,
+      sameSite: "lax",
+      secure: false,
+      maxAge: 1000 * 60 * 60 * 24
     }
   })
 );
-
-app.use(passport.initialize());
-app.use(passport.session());
-
-app.use(express.static(__dirname));
 
 app.use(
   "/uploads",
   express.static(UPLOAD_DIR)
 );
 
-/* DATABASE */
+app.use(express.static(ROOT));
 
-db.serialize(() => {
+const db = new sqlite3.Database(DB_FILE);
 
-  db.run(`
-    CREATE TABLE IF NOT EXISTS admins (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      email TEXT UNIQUE NOT NULL,
-      role TEXT NOT NULL DEFAULT 'admin'
-    )
-  `);
+function run(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function (err) {
+      if (err) {
+        reject(err);
+        return;
+      }
 
-  db.run(`
+      resolve({
+        id: this.lastID,
+        changes: this.changes
+      });
+    });
+  });
+}
+
+function get(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.get(sql, params, (err, row) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      resolve(row);
+    });
+  });
+}
+
+function all(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (err, rows) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      resolve(rows);
+    });
+  });
+}
+
+async function initDatabase() {
+  await run(`
     CREATE TABLE IF NOT EXISTS students (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
-      role TEXT DEFAULT 'Member Kelas',
-      photo TEXT
-    )
-  `);
-
-  db.run(`
-    CREATE TABLE IF NOT EXISTS gallery (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      image TEXT,
+      role TEXT DEFAULT '',
+      photo TEXT DEFAULT '',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
-  db.run(`
+  await run(`
+    CREATE TABLE IF NOT EXISTS gallery (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      image TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  await run(`
     CREATE TABLE IF NOT EXISTS announcements (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
@@ -98,176 +130,186 @@ db.serialize(() => {
     )
   `);
 
-  db.run(`
+  await run(`
     CREATE TABLE IF NOT EXISTS agenda (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
-      date TEXT,
-      description TEXT,
+      date TEXT NOT NULL,
+      description TEXT DEFAULT '',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
-  db.run(`
+  await run(`
     CREATE TABLE IF NOT EXISTS settings (
-      id INTEGER PRIMARY KEY CHECK (id = 1),
-      className TEXT,
-      founder TEXT,
-      instagram TEXT
+      id INTEGER PRIMARY KEY,
+      className TEXT NOT NULL,
+      founder TEXT NOT NULL,
+      instagram TEXT DEFAULT ''
     )
   `);
 
-  db.run(
-    `
-    INSERT OR IGNORE INTO settings
-    (id, className, founder, instagram)
-    VALUES
-    (1, 'X MP 2', 'NAZUAN AHMAD', '@kelas_xmp2')
-    `
+  const settings = await get(
+    "SELECT * FROM settings WHERE id = 1"
   );
 
-  db.run(
-    `
-    INSERT OR IGNORE INTO admins
-    (email, role)
-    VALUES (?, 'owner')
-    `,
-    [OWNER_EMAIL]
+  if (!settings) {
+    await run(
+      `
+      INSERT INTO settings
+      (id, className, founder, instagram)
+      VALUES
+      (1, ?, ?, ?)
+      `,
+      [
+        "X MP 2",
+        "NAZUAN AHMAD",
+        ""
+      ]
+    );
+  }
+
+  const students = await get(
+    "SELECT COUNT(*) AS total FROM students"
   );
 
-});
+  if (students.total === 0) {
+    await run(
+      `
+      INSERT INTO students
+      (name, role)
+      VALUES (?, ?)
+      `,
+      ["Nama Siswa 1", "Siswa"]
+    );
 
-/* GOOGLE LOGIN */
+    await run(
+      `
+      INSERT INTO students
+      (name, role)
+      VALUES (?, ?)
+      `,
+      ["Nama Siswa 2", "Siswa"]
+    );
 
-if (
-  process.env.GOOGLE_CLIENT_ID &&
-  process.env.GOOGLE_CLIENT_SECRET &&
-  process.env.GOOGLE_CLIENT_ID !== "ISI_GOOGLE_CLIENT_ID"
-) {
+    await run(
+      `
+      INSERT INTO students
+      (name, role)
+      VALUES (?, ?)
+      `,
+      ["Nama Siswa 3", "Siswa"]
+    );
+  }
 
-  passport.use(
-    new GoogleStrategy(
-      {
-        clientID: process.env.GOOGLE_CLIENT_ID,
-
-        clientSecret:
-          process.env.GOOGLE_CLIENT_SECRET,
-
-        callbackURL:
-          `${BASE_URL}/auth/google/callback`
-      },
-
-      async (
-        accessToken,
-        refreshToken,
-        profile,
-        done
-      ) => {
-
-        const email =
-          profile.emails?.[0]?.value
-            ?.toLowerCase()
-            ?.trim();
-
-        if (!email) {
-          return done(null, false);
-        }
-
-        db.get(
-          `
-          SELECT *
-          FROM admins
-          WHERE LOWER(email) = LOWER(?)
-          `,
-          [email],
-          (error, admin) => {
-
-            if (error) {
-              return done(error);
-            }
-
-            if (!admin) {
-              return done(null, false);
-            }
-
-            done(null, {
-              id: admin.id,
-              email,
-              name:
-                profile.displayName ||
-                email,
-              role: admin.role
-            });
-
-          }
-        );
-
-      }
-    )
+  const announcements = await get(
+    "SELECT COUNT(*) AS total FROM announcements"
   );
 
+  if (announcements.total === 0) {
+    await run(
+      `
+      INSERT INTO announcements
+      (title, content)
+      VALUES (?, ?)
+      `,
+      [
+        "Selamat Datang di Website X MP 2",
+        "Website resmi kelas X MP 2 telah aktif."
+      ]
+    );
+  }
 }
 
-passport.serializeUser((user, done) => {
-  done(null, user);
+function requireLogin(req, res, next) {
+  if (!req.session.user) {
+    return res.status(401).json({
+      success: false,
+      message: "Anda belum login."
+    });
+  }
+
+  next();
+}
+
+function requireOwner(req, res, next) {
+  if (!req.session.user) {
+    return res.status(401).json({
+      success: false,
+      message: "Anda belum login."
+    });
+  }
+
+  if (req.session.user.role !== "owner") {
+    return res.status(403).json({
+      success: false,
+      message: "Akses khusus owner."
+    });
+  }
+
+  next();
+}
+
+/* =========================
+   HEALTH CHECK
+========================= */
+
+app.get("/api/health", (req, res) => {
+  res.json({
+    success: true,
+    status: "online",
+    className: "X MP 2",
+    server: "NAZUAN AHMAD"
+  });
 });
 
-passport.deserializeUser((user, done) => {
-  done(null, user);
-});
+/* =========================
+   AUTH
+========================= */
 
-/* AUTH */
+app.post("/api/auth/login", (req, res) => {
+  const username = String(
+    req.body.username || ""
+  ).trim();
 
-app.get("/auth/google", (req, res, next) => {
+  const password = String(
+    req.body.password || ""
+  );
 
   if (
-    !process.env.GOOGLE_CLIENT_ID ||
-    process.env.GOOGLE_CLIENT_ID === "ISI_GOOGLE_CLIENT_ID"
+    username !== ADMIN_USERNAME ||
+    password !== ADMIN_PASSWORD
   ) {
-
-    return res.status(503).send(`
-      <h2>Google Login belum dikonfigurasi</h2>
-      <p>Isi GOOGLE_CLIENT_ID dan GOOGLE_CLIENT_SECRET di file .env.</p>
-      <a href="/">Kembali</a>
-    `);
-
+    return res.status(401).json({
+      success: false,
+      message: "Username atau password salah."
+    });
   }
 
-  passport.authenticate("google", {
-    scope: ["profile", "email"]
-  })(req, res, next);
+  req.session.user = {
+    username: ADMIN_USERNAME,
+    name: "NAZUAN AHMAD",
+    email: OWNER_EMAIL,
+    role: "owner"
+  };
 
+  res.json({
+    success: true,
+    message: "Login berhasil.",
+    user: req.session.user
+  });
 });
 
-app.get(
-  "/auth/google/callback",
-  passport.authenticate("google", {
-    failureRedirect: "/?login=failed"
-  }),
-  (req, res) => {
-    res.redirect("/#admin");
-  }
-);
-
 app.post("/api/auth/logout", (req, res) => {
-
-  req.logout(() => {
-
-    req.session.destroy(() => {
-
-      res.json({
-        success: true
-      });
-
+  req.session.destroy(() => {
+    res.json({
+      success: true
     });
-
   });
-
 });
 
 app.get("/api/auth/me", (req, res) => {
-
-  if (!req.user) {
+  if (!req.session.user) {
     return res.json({
       loggedIn: false
     });
@@ -275,792 +317,626 @@ app.get("/api/auth/me", (req, res) => {
 
   res.json({
     loggedIn: true,
-    id: req.user.id,
-    email: req.user.email,
-    name: req.user.name,
-    role: req.user.role
+    user: req.session.user
   });
-
 });
 
-/* MIDDLEWARE */
+/* =========================
+   SETTINGS
+========================= */
 
-function requireLogin(req, res, next) {
+app.get("/api/settings", async (req, res) => {
+  try {
+    const data = await get(
+      "SELECT * FROM settings WHERE id = 1"
+    );
 
-  if (!req.isAuthenticated()) {
-
-    return res.status(401).json({
-      message: "Anda belum login."
+    res.json({
+      success: true,
+      data
     });
-
-  }
-
-  next();
-
-}
-
-function requireOwner(req, res, next) {
-
-  if (!req.isAuthenticated()) {
-
-    return res.status(401).json({
-      message: "Anda belum login."
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
     });
-
   }
-
-  if (req.user.role !== "owner") {
-
-    return res.status(403).json({
-      message: "Khusus owner."
-    });
-
-  }
-
-  next();
-
-}
-
-/* HEALTH */
-
-app.get("/api/health", (req, res) => {
-
-  res.json({
-    status: "ok",
-    class: "X MP 2",
-    server: "running"
-  });
-
-});
-
-/* SETTINGS */
-
-app.get("/api/settings", (req, res) => {
-
-  db.get(
-    "SELECT * FROM settings WHERE id = 1",
-    [],
-    (error, row) => {
-
-      if (error) {
-        return res.status(500).json({
-          message: error.message
-        });
-      }
-
-      res.json(row || {
-        className: "X MP 2",
-        founder: "NAZUAN AHMAD",
-        instagram: "@kelas_xmp2"
-      });
-
-    }
-  );
-
 });
 
 app.put(
   "/api/settings",
-  requireLogin,
-  (req, res) => {
+  requireOwner,
+  async (req, res) => {
+    try {
+      const className =
+        String(req.body.className || "").trim();
 
-    const {
-      className,
-      founder,
-      instagram
-    } = req.body;
+      const founder =
+        String(req.body.founder || "").trim();
 
-    db.run(
-      `
-      UPDATE settings
-      SET className = ?,
-          founder = ?,
-          instagram = ?
-      WHERE id = 1
-      `,
-      [
-        className || "X MP 2",
-        founder || "NAZUAN AHMAD",
-        instagram || ""
-      ],
-      function (error) {
+      const instagram =
+        String(req.body.instagram || "").trim();
 
-        if (error) {
-          return res.status(500).json({
-            message: error.message
-          });
-        }
+      await run(
+        `
+        UPDATE settings
+        SET className = ?,
+            founder = ?,
+            instagram = ?
+        WHERE id = 1
+        `,
+        [
+          className || "X MP 2",
+          founder || "NAZUAN AHMAD",
+          instagram
+        ]
+      );
 
-        res.json({
-          success: true
-        });
-
-      }
-    );
-
+      res.json({
+        success: true,
+        message: "Pengaturan berhasil disimpan."
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
   }
 );
 
-/* STUDENTS */
+/* =========================
+   STUDENTS
+========================= */
 
-app.get("/api/students", (req, res) => {
+app.get("/api/students", async (req, res) => {
+  try {
+    const data = await all(
+      "SELECT * FROM students ORDER BY id DESC"
+    );
 
-  db.all(
-    `
-    SELECT *
-    FROM students
-    ORDER BY id DESC
-    `,
-    [],
-    (error, rows) => {
-
-      if (error) {
-        return res.status(500).json({
-          message: error.message
-        });
-      }
-
-      res.json(rows || []);
-
-    }
-  );
-
+    res.json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
 });
 
 app.post(
   "/api/students",
-  requireLogin,
-  (req, res) => {
+  requireOwner,
+  async (req, res) => {
+    try {
+      const name =
+        String(req.body.name || "").trim();
 
-    const {
-      name,
-      role,
-      photo
-    } = req.body;
+      const role =
+        String(req.body.role || "Siswa").trim();
 
-    if (!name) {
+      if (!name) {
+        return res.status(400).json({
+          success: false,
+          message: "Nama siswa wajib diisi."
+        });
+      }
 
-      return res.status(400).json({
-        message: "Nama siswa wajib diisi."
+      const result = await run(
+        `
+        INSERT INTO students
+        (name, role)
+        VALUES (?, ?)
+        `,
+        [name, role]
+      );
+
+      res.json({
+        success: true,
+        id: result.id,
+        message: "Siswa berhasil ditambahkan."
       });
-
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
     }
-
-    db.run(
-      `
-      INSERT INTO students
-      (name, role, photo)
-      VALUES (?, ?, ?)
-      `,
-      [
-        name,
-        role || "Member Kelas",
-        photo || null
-      ],
-      function (error) {
-
-        if (error) {
-          return res.status(500).json({
-            message: error.message
-          });
-        }
-
-        res.json({
-          success: true,
-          id: this.lastID
-        });
-
-      }
-    );
-
-  }
-);
-
-app.put(
-  "/api/students/:id",
-  requireLogin,
-  (req, res) => {
-
-    const {
-      name,
-      role,
-      photo
-    } = req.body;
-
-    db.run(
-      `
-      UPDATE students
-      SET name = ?,
-          role = ?,
-          photo = ?
-      WHERE id = ?
-      `,
-      [
-        name,
-        role,
-        photo,
-        req.params.id
-      ],
-      function (error) {
-
-        if (error) {
-          return res.status(500).json({
-            message: error.message
-          });
-        }
-
-        res.json({
-          success: true
-        });
-
-      }
-    );
-
   }
 );
 
 app.delete(
   "/api/students/:id",
-  requireLogin,
-  (req, res) => {
+  requireOwner,
+  async (req, res) => {
+    try {
+      await run(
+        "DELETE FROM students WHERE id = ?",
+        [req.params.id]
+      );
 
-    db.run(
-      "DELETE FROM students WHERE id = ?",
-      [req.params.id],
-      function (error) {
-
-        if (error) {
-          return res.status(500).json({
-            message: error.message
-          });
-        }
-
-        res.json({
-          success: true
-        });
-
-      }
-    );
-
+      res.json({
+        success: true,
+        message: "Siswa berhasil dihapus."
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
   }
 );
 
-/* UPLOAD */
+/* =========================
+   UPLOAD
+========================= */
 
 const storage = multer.diskStorage({
-
-  destination: (req, file, cb) => {
+  destination: function (req, file, cb) {
     cb(null, UPLOAD_DIR);
   },
 
-  filename: (req, file, cb) => {
-
+  filename: function (req, file, cb) {
     const ext =
       path.extname(file.originalname)
-        .toLowerCase() || ".jpg";
+        .toLowerCase();
 
     const name =
-      `image-${Date.now()}-${Math.random()
+      Date.now() +
+      "-" +
+      Math.random()
         .toString(36)
-        .slice(2)}${ext}`;
+        .substring(2, 9);
 
-    cb(null, name);
-
+    cb(null, name + ext);
   }
-
 });
 
 const upload = multer({
-
   storage,
 
   limits: {
     fileSize: 10 * 1024 * 1024
   },
 
-  fileFilter: (req, file, cb) => {
+  fileFilter: function (req, file, cb) {
+    const allowed = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif"
+    ];
 
-    if (!file.mimetype.startsWith("image/")) {
+    if (!allowed.includes(file.mimetype)) {
       return cb(
-        new Error("File harus berupa gambar.")
+        new Error(
+          "File harus berupa JPG, PNG, WEBP, atau GIF."
+        )
       );
     }
 
     cb(null, true);
-
   }
-
 });
 
 app.post(
   "/api/uploads",
-  requireLogin,
+  requireOwner,
   upload.single("image"),
-  (req, res) => {
-
-    if (!req.file) {
-
-      return res.status(400).json({
-        message: "Tidak ada gambar."
-      });
-
-    }
-
-    res.json({
-      success: true,
-      url: `/uploads/${req.file.filename}`
-    });
-
-  }
-);
-
-/* GALLERY */
-
-app.get("/api/gallery", (req, res) => {
-
-  db.all(
-    `
-    SELECT *
-    FROM gallery
-    ORDER BY id DESC
-    `,
-    [],
-    (error, rows) => {
-
-      if (error) {
-        return res.status(500).json({
-          message: error.message
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: "Foto belum dipilih."
         });
       }
 
-      res.json(rows || []);
+      const url =
+        "/uploads/" +
+        req.file.filename;
 
+      res.json({
+        success: true,
+        url,
+        filename: req.file.filename
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
     }
-  );
+  }
+);
 
+/* =========================
+   GALLERY
+========================= */
+
+app.get("/api/gallery", async (req, res) => {
+  try {
+    const data = await all(
+      `
+      SELECT * FROM gallery
+      ORDER BY id DESC
+      `
+    );
+
+    res.json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
 });
 
 app.post(
   "/api/gallery",
-  requireLogin,
-  (req, res) => {
+  requireOwner,
+  async (req, res) => {
+    try {
+      const title =
+        String(req.body.title || "").trim();
 
-    const {
-      title,
-      image
-    } = req.body;
+      const image =
+        String(req.body.image || "").trim();
 
-    if (!title) {
-
-      return res.status(400).json({
-        message: "Judul wajib diisi."
-      });
-
-    }
-
-    db.run(
-      `
-      INSERT INTO gallery
-      (title, image)
-      VALUES (?, ?)
-      `,
-      [
-        title,
-        image || null
-      ],
-      function (error) {
-
-        if (error) {
-          return res.status(500).json({
-            message: error.message
-          });
-        }
-
-        res.json({
-          success: true,
-          id: this.lastID
+      if (!title || !image) {
+        return res.status(400).json({
+          success: false,
+          message: "Judul dan foto wajib diisi."
         });
-
       }
-    );
 
+      const result = await run(
+        `
+        INSERT INTO gallery
+        (title, image)
+        VALUES (?, ?)
+        `,
+        [title, image]
+      );
+
+      res.json({
+        success: true,
+        id: result.id,
+        message: "Foto berhasil ditambahkan."
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
   }
 );
 
 app.delete(
   "/api/gallery/:id",
-  requireLogin,
-  (req, res) => {
+  requireOwner,
+  async (req, res) => {
+    try {
+      const item = await get(
+        "SELECT * FROM gallery WHERE id = ?",
+        [req.params.id]
+      );
 
-    db.run(
-      "DELETE FROM gallery WHERE id = ?",
-      [req.params.id],
-      function (error) {
+      if (item && item.image) {
+        const filename =
+          path.basename(item.image);
 
-        if (error) {
-          return res.status(500).json({
-            message: error.message
-          });
+        const filePath =
+          path.join(
+            UPLOAD_DIR,
+            filename
+          );
+
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
         }
-
-        res.json({
-          success: true
-        });
-
       }
-    );
 
+      await run(
+        "DELETE FROM gallery WHERE id = ?",
+        [req.params.id]
+      );
+
+      res.json({
+        success: true,
+        message: "Foto berhasil dihapus."
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
   }
 );
 
-/* ANNOUNCEMENTS */
+/* =========================
+   ANNOUNCEMENTS
+========================= */
 
 app.get(
   "/api/announcements",
-  (req, res) => {
+  async (req, res) => {
+    try {
+      const data = await all(
+        `
+        SELECT * FROM announcements
+        ORDER BY id DESC
+        `
+      );
 
-    db.all(
-      `
-      SELECT *
-      FROM announcements
-      ORDER BY id DESC
-      `,
-      [],
-      (error, rows) => {
-
-        if (error) {
-          return res.status(500).json({
-            message: error.message
-          });
-        }
-
-        res.json(rows || []);
-
-      }
-    );
-
+      res.json({
+        success: true,
+        data
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
   }
 );
 
 app.post(
   "/api/announcements",
-  requireLogin,
-  (req, res) => {
+  requireOwner,
+  async (req, res) => {
+    try {
+      const title =
+        String(req.body.title || "").trim();
 
-    const {
-      title,
-      content
-    } = req.body;
+      const content =
+        String(req.body.content || "").trim();
 
-    if (!title || !content) {
-
-      return res.status(400).json({
-        message: "Judul dan isi wajib diisi."
-      });
-
-    }
-
-    db.run(
-      `
-      INSERT INTO announcements
-      (title, content)
-      VALUES (?, ?)
-      `,
-      [
-        title,
-        content
-      ],
-      function (error) {
-
-        if (error) {
-          return res.status(500).json({
-            message: error.message
-          });
-        }
-
-        res.json({
-          success: true,
-          id: this.lastID
+      if (!title || !content) {
+        return res.status(400).json({
+          success: false,
+          message: "Judul dan isi wajib diisi."
         });
-
       }
-    );
 
+      await run(
+        `
+        INSERT INTO announcements
+        (title, content)
+        VALUES (?, ?)
+        `,
+        [title, content]
+      );
+
+      res.json({
+        success: true,
+        message: "Pengumuman berhasil dibuat."
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
   }
 );
 
 app.delete(
   "/api/announcements/:id",
-  requireLogin,
-  (req, res) => {
+  requireOwner,
+  async (req, res) => {
+    try {
+      await run(
+        "DELETE FROM announcements WHERE id = ?",
+        [req.params.id]
+      );
 
-    db.run(
-      "DELETE FROM announcements WHERE id = ?",
-      [req.params.id],
-      function (error) {
-
-        if (error) {
-          return res.status(500).json({
-            message: error.message
-          });
-        }
-
-        res.json({
-          success: true
-        });
-
-      }
-    );
-
+      res.json({
+        success: true,
+        message: "Pengumuman berhasil dihapus."
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
   }
 );
 
-/* AGENDA */
+/* =========================
+   AGENDA
+========================= */
 
-app.get("/api/agenda", (req, res) => {
+app.get("/api/agenda", async (req, res) => {
+  try {
+    const data = await all(
+      `
+      SELECT * FROM agenda
+      ORDER BY date ASC, id DESC
+      `
+    );
 
-  db.all(
-    `
-    SELECT *
-    FROM agenda
-    ORDER BY date ASC, id DESC
-    `,
-    [],
-    (error, rows) => {
-
-      if (error) {
-        return res.status(500).json({
-          message: error.message
-        });
-      }
-
-      res.json(rows || []);
-
-    }
-  );
-
+    res.json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
 });
 
 app.post(
   "/api/agenda",
-  requireLogin,
-  (req, res) => {
+  requireOwner,
+  async (req, res) => {
+    try {
+      const title =
+        String(req.body.title || "").trim();
 
-    const {
-      title,
-      date,
-      description
-    } = req.body;
+      const date =
+        String(req.body.date || "").trim();
 
-    if (!title) {
+      const description =
+        String(
+          req.body.description || ""
+        ).trim();
 
-      return res.status(400).json({
-        message: "Judul agenda wajib diisi."
-      });
-
-    }
-
-    db.run(
-      `
-      INSERT INTO agenda
-      (title, date, description)
-      VALUES (?, ?, ?)
-      `,
-      [
-        title,
-        date || null,
-        description || ""
-      ],
-      function (error) {
-
-        if (error) {
-          return res.status(500).json({
-            message: error.message
-          });
-        }
-
-        res.json({
-          success: true,
-          id: this.lastID
+      if (!title || !date) {
+        return res.status(400).json({
+          success: false,
+          message: "Judul dan tanggal wajib diisi."
         });
-
       }
-    );
 
+      await run(
+        `
+        INSERT INTO agenda
+        (title, date, description)
+        VALUES (?, ?, ?)
+        `,
+        [
+          title,
+          date,
+          description
+        ]
+      );
+
+      res.json({
+        success: true,
+        message: "Agenda berhasil ditambahkan."
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
   }
 );
 
 app.delete(
   "/api/agenda/:id",
-  requireLogin,
-  (req, res) => {
+  requireOwner,
+  async (req, res) => {
+    try {
+      await run(
+        "DELETE FROM agenda WHERE id = ?",
+        [req.params.id]
+      );
 
-    db.run(
-      "DELETE FROM agenda WHERE id = ?",
-      [req.params.id],
-      function (error) {
-
-        if (error) {
-          return res.status(500).json({
-            message: error.message
-          });
-        }
-
-        res.json({
-          success: true
-        });
-
-      }
-    );
-
+      res.json({
+        success: true,
+        message: "Agenda berhasil dihapus."
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
   }
 );
 
-/* ADMINS */
+/* =========================
+   ADMIN INFO
+========================= */
 
 app.get(
   "/api/admins",
   requireOwner,
-  (req, res) => {
-
-    db.all(
-      `
-      SELECT id, email, role
-      FROM admins
-      ORDER BY id ASC
-      `,
-      [],
-      (error, rows) => {
-
-        if (error) {
-          return res.status(500).json({
-            message: error.message
-          });
+  async (req, res) => {
+    res.json({
+      success: true,
+      data: [
+        {
+          username: ADMIN_USERNAME,
+          name: "NAZUAN AHMAD",
+          email: OWNER_EMAIL,
+          role: "owner"
         }
-
-        res.json(rows || []);
-
-      }
-    );
-
+      ]
+    });
   }
 );
 
-app.post(
-  "/api/admins",
-  requireOwner,
-  (req, res) => {
+/* =========================
+   ERROR UPLOAD
+========================= */
 
-    const email =
-      String(req.body.email || "")
-        .toLowerCase()
-        .trim();
-
-    const role =
-      req.body.role || "admin";
-
-    if (!email) {
-
+app.use(
+  (err, req, res, next) => {
+    if (err) {
       return res.status(400).json({
-        message: "Gmail wajib diisi."
+        success: false,
+        message: err.message
       });
-
     }
 
-    db.run(
-      `
-      INSERT INTO admins
-      (email, role)
-      VALUES (?, ?)
-      `,
-      [
-        email,
-        role
-      ],
-      function (error) {
-
-        if (error) {
-
-          if (error.message.includes("UNIQUE")) {
-
-            return res.status(409).json({
-              message: "Email tersebut sudah terdaftar."
-            });
-
-          }
-
-          return res.status(500).json({
-            message: error.message
-          });
-
-        }
-
-        res.json({
-          success: true,
-          id: this.lastID
-        });
-
-      }
-    );
-
+    next();
   }
 );
 
-app.delete(
-  "/api/admins/:id",
-  requireOwner,
-  (req, res) => {
+/* =========================
+   FRONTEND FALLBACK
+========================= */
 
-    db.run(
-      `
-      DELETE FROM admins
-      WHERE id = ?
-      AND LOWER(email) != LOWER(?)
-      `,
-      [
-        req.params.id,
-        OWNER_EMAIL
-      ],
-      function (error) {
-
-        if (error) {
-          return res.status(500).json({
-            message: error.message
-          });
-        }
-
-        res.json({
-          success: true
-        });
-
-      }
-    );
-
-  }
-);
-
-/* FALLBACK */
-
-app.get("*", (req, res) => {
-
+app.use((req, res) => {
   res.sendFile(
-    path.join(__dirname, "index.html")
+    path.join(ROOT, "index.html")
   );
-
 });
 
-/* START */
+/* =========================
+   START
+========================= */
 
-app.listen(PORT, () => {
+initDatabase()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log("");
+      console.log(
+        "======================================"
+      );
+      console.log(
+        "        X MP 2 WEBSITE ONLINE"
+      );
+      console.log(
+        "======================================"
+      );
+      console.log(
+        `Website : http://localhost:${PORT}`
+      );
+      console.log(
+        `Admin   : ${ADMIN_USERNAME}`
+      );
+      console.log(
+        "Status  : ONLINE"
+      );
+      console.log(
+        "======================================"
+      );
+      console.log("");
+    });
+  })
+  .catch((error) => {
+    console.error(
+      "Gagal menjalankan database:",
+      error
+    );
 
-  console.log("");
-  console.log("=================================");
-  console.log("       X MP 2 WEBSITE");
-  console.log("=================================");
-  console.log(`Website : ${BASE_URL}`);
-  console.log(`Health  : ${BASE_URL}/api/health`);
-  console.log(`Owner   : ${OWNER_EMAIL}`);
-  console.log("=================================");
-  console.log("");
-
-});
+    process.exit(1);
+  });
