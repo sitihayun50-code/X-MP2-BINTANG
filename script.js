@@ -1,149 +1,86 @@
-/* =========================================
-   X MP 2 — CLASS PORTAL
-   ========================================= */
-
 const CLASS_NAME = "X MP 2";
 
 const INSTAGRAM_USERNAME = "@kelas_xmp2";
-
 const INSTAGRAM_URL = "https://instagram.com/";
 
 const STORAGE_KEY = "xmp2_students";
-
 const THEME_KEY = "xmp2_theme";
+const VISITOR_KEY = "xmp2_visitor_name";
 
 
-/* =========================================
-   DATA SISWA
-   ========================================= */
+// ================================
+// DATA SISWA
+// ================================
 
 const defaultStudents = [
-
     {
         nama: "Nama Ketua",
         jabatan: "Ketua Kelas",
         kelas: CLASS_NAME,
         foto: "foto/siswa1.jpg"
     },
-
     {
         nama: "Nama Wakil",
         jabatan: "Wakil Ketua",
         kelas: CLASS_NAME,
         foto: "foto/siswa2.jpg"
     },
-
     {
         nama: "Nama Sekretaris",
         jabatan: "Sekretaris",
         kelas: CLASS_NAME,
         foto: "foto/siswa3.jpg"
     },
-
     {
         nama: "Nama Bendahara",
         jabatan: "Bendahara",
         kelas: CLASS_NAME,
         foto: "foto/siswa4.jpg"
     },
-
     {
-        nama: "Nama Siswa 05",
+        nama: "Nama Siswa 5",
         jabatan: "Siswa",
         kelas: CLASS_NAME,
         foto: "foto/siswa5.jpg"
     },
-
     {
-        nama: "Nama Siswa 06",
+        nama: "Nama Siswa 6",
         jabatan: "Siswa",
         kelas: CLASS_NAME,
         foto: "foto/siswa6.jpg"
     },
-
     {
-        nama: "Nama Siswa 07",
+        nama: "Nama Siswa 7",
         jabatan: "Siswa",
         kelas: CLASS_NAME,
         foto: "foto/siswa7.jpg"
     },
-
     {
-        nama: "Nama Siswa 08",
+        nama: "Nama Siswa 8",
         jabatan: "Siswa",
         kelas: CLASS_NAME,
         foto: "foto/siswa8.jpg"
     }
-
 ];
 
 
-/* =========================================
-   LOAD DATA
-   ========================================= */
+// ================================
+// ELEMENT
+// ================================
 
-let students;
+const nameModal = document.getElementById("nameModal");
+const visitorNameInput = document.getElementById("visitorNameInput");
+const enterWebsiteBtn = document.getElementById("enterWebsiteBtn");
 
-try {
+const visitorName = document.getElementById("visitorName");
+const dashboardVisitorName =
+    document.getElementById("dashboardVisitorName");
 
-    const saved = localStorage.getItem(STORAGE_KEY);
-
-    students = saved
-        ? JSON.parse(saved)
-        : [...defaultStudents];
-
-} catch (error) {
-
-    students = [...defaultStudents];
-
-}
-
-
-/* =========================================
-   ELEMENT
-   ========================================= */
-
-const studentsGrid =
-    document.getElementById("studentsGrid");
-
-const officers =
-    document.getElementById("officers");
-
-const totalStudents =
-    document.getElementById("totalStudents");
-
-const totalOfficers =
-    document.getElementById("totalOfficers");
-
-const searchStudent =
-    document.getElementById("searchStudent");
-
-const studentModal =
-    document.getElementById("studentModal");
-
-const addStudentBtn =
-    document.getElementById("addStudentBtn");
-
-const closeModal =
-    document.getElementById("closeModal");
-
-const studentForm =
-    document.getElementById("studentForm");
-
-const studentName =
-    document.getElementById("studentName");
-
-const studentPosition =
-    document.getElementById("studentPosition");
-
-const studentPhoto =
-    document.getElementById("studentPhoto");
+const changeNameBtn =
+    document.getElementById("changeNameBtn");
 
 const themeBtn =
     document.getElementById("themeBtn");
-
-const themeIcon =
-    document.getElementById("themeIcon");
 
 const menuBtn =
     document.getElementById("menuBtn");
@@ -151,64 +88,227 @@ const menuBtn =
 const sidebar =
     document.getElementById("sidebar");
 
-const overlay =
-    document.getElementById("overlay");
+const studentGrid =
+    document.getElementById("studentGrid");
+
+const totalStudents =
+    document.getElementById("totalStudents");
+
+const studentSearch =
+    document.getElementById("studentSearch");
+
+const addStudentBtn =
+    document.getElementById("addStudentBtn");
+
+const studentModal =
+    document.getElementById("studentModal");
+
+const closeStudentModal =
+    document.getElementById("closeStudentModal");
+
+const studentForm =
+    document.getElementById("studentForm");
 
 
-/* =========================================
-   IMAGE FALLBACK
-   ========================================= */
+// ================================
+// NAMA PENGUNJUNG
+// ================================
 
-function imageFallback(image, text = "X MP 2") {
+function loadVisitorName() {
 
-    if (!image || image.dataset.fallback === "true") {
+    const savedName =
+        localStorage.getItem(VISITOR_KEY);
+
+    if (savedName) {
+
+        showVisitorName(savedName);
+
+        nameModal.classList.add("hidden");
+
+    } else {
+
+        nameModal.classList.remove("hidden");
+
+        setTimeout(() => {
+            visitorNameInput.focus();
+        }, 300);
+    }
+}
+
+
+function saveVisitorName() {
+
+    const name =
+        visitorNameInput.value.trim();
+
+    if (!name) {
+
+        visitorNameInput.focus();
+
+        visitorNameInput.placeholder =
+            "Nama wajib diisi!";
+
         return;
     }
 
-    image.dataset.fallback = "true";
+    localStorage.setItem(
+        VISITOR_KEY,
+        name
+    );
 
-    const container = image.parentElement;
+    showVisitorName(name);
 
-    image.style.display = "none";
+    nameModal.classList.add("hidden");
 
-    container.classList.add("image-placeholder");
+    visitorNameInput.value = "";
+}
 
-    if (!container.querySelector(".fallback-text")) {
 
-        const fallback = document.createElement("div");
+function showVisitorName(name) {
 
-        fallback.className = "fallback-text";
+    visitorName.textContent = name;
 
-        fallback.textContent = text;
+    dashboardVisitorName.textContent = name;
+}
 
-        container.appendChild(fallback);
+
+enterWebsiteBtn.addEventListener(
+    "click",
+    saveVisitorName
+);
+
+
+visitorNameInput.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (event.key === "Enter") {
+            saveVisitorName();
+        }
+
+    }
+);
+
+
+// ================================
+// GANTI NAMA
+// ================================
+
+changeNameBtn.addEventListener(
+    "click",
+    function() {
+
+        const currentName =
+            localStorage.getItem(VISITOR_KEY);
+
+        visitorNameInput.value =
+            currentName || "";
+
+        nameModal.classList.remove("hidden");
+
+        setTimeout(() => {
+            visitorNameInput.focus();
+            visitorNameInput.select();
+        }, 100);
+
+    }
+);
+
+
+// ================================
+// DARK MODE
+// ================================
+
+function loadTheme() {
+
+    const savedTheme =
+        localStorage.getItem(THEME_KEY);
+
+    if (savedTheme === "dark") {
+        document.body.classList.add("dark");
+    }
+
+}
+
+
+themeBtn.addEventListener(
+    "click",
+    function() {
+
+        document.body.classList.toggle("dark");
+
+        const isDark =
+            document.body.classList.contains("dark");
+
+        localStorage.setItem(
+            THEME_KEY,
+            isDark ? "dark" : "light"
+        );
+
+    }
+);
+
+
+// ================================
+// MOBILE SIDEBAR
+// ================================
+
+menuBtn.addEventListener(
+    "click",
+    function() {
+
+        sidebar.classList.toggle("open");
+
+    }
+);
+
+
+document.querySelectorAll(".nav-link")
+.forEach(link => {
+
+    link.addEventListener(
+        "click",
+        function() {
+
+            if (
+                window.innerWidth <= 800
+            ) {
+                sidebar.classList.remove("open");
+            }
+
+        }
+    );
+
+});
+
+
+// ================================
+// DATA SISWA
+// ================================
+
+function getStudents() {
+
+    const saved =
+        localStorage.getItem(STORAGE_KEY);
+
+    if (!saved) {
+        return defaultStudents;
+    }
+
+    try {
+
+        return JSON.parse(saved);
+
+    } catch {
+
+        return defaultStudents;
 
     }
 
 }
 
 
-/* =========================================
-   INITIALS
-   ========================================= */
-
-function getInitials(name) {
-
-    return name
-        .split(" ")
-        .filter(Boolean)
-        .slice(0, 2)
-        .map(word => word[0].toUpperCase())
-        .join("");
-
-}
-
-
-/* =========================================
-   SAVE
-   ========================================= */
-
-function saveStudents() {
+function saveStudents(students) {
 
     localStorage.setItem(
         STORAGE_KEY,
@@ -218,318 +318,196 @@ function saveStudents() {
 }
 
 
-/* =========================================
-   RENDER STUDENTS
-   ========================================= */
-
-function renderStudents(keyword = "") {
-
-    studentsGrid.innerHTML = "";
-
-    const search =
-        keyword.toLowerCase().trim();
-
-
-    const filtered =
-        students.filter(student =>
-            student.nama
-                .toLowerCase()
-                .includes(search)
-        );
-
-
-    if (filtered.length === 0) {
-
-        studentsGrid.innerHTML = `
-            <div class="empty-state">
-                Tidak ada siswa yang ditemukan.
-            </div>
-        `;
-
-        return;
-
-    }
-
-
-    filtered.forEach((student) => {
-
-        const index =
-            students.indexOf(student);
-
-
-        const card =
-            document.createElement("article");
-
-        card.className = "student-card";
-
-
-        card.innerHTML = `
-
-            <div class="student-photo">
-
-                <img
-                    src="${student.foto || "foto/logo.png"}"
-                    alt="${escapeHTML(student.nama)}"
-                    onerror="imageFallback(this, '${escapeHTML(getInitials(student.nama))}')"
-                >
-
-                <button
-                    class="delete-student"
-                    title="Hapus siswa"
-                    onclick="deleteStudent(${index})"
-                >
-                    ×
-                </button>
-
-            </div>
-
-
-            <div class="student-info">
-
-                <h3>
-                    ${escapeHTML(student.nama)}
-                </h3>
-
-                <p>
-                    ${escapeHTML(student.jabatan)}
-                    ·
-                    ${escapeHTML(student.kelas)}
-                </p>
-
-            </div>
-
-        `;
-
-
-        studentsGrid.appendChild(card);
-
-    });
-
-
-    updateStats();
-
-}
-
-
-/* =========================================
-   RENDER OFFICERS
-   ========================================= */
-
-function renderOfficers() {
-
-    officers.innerHTML = "";
-
-
-    const officerList =
-        students.filter(student =>
-            student.jabatan !== "Siswa"
-        );
-
-
-    officerList.forEach(student => {
-
-        const card =
-            document.createElement("article");
-
-        card.className = "officer-card";
-
-
-        card.innerHTML = `
-
-            <div class="officer-photo">
-
-                <img
-                    src="${student.foto || "foto/logo.png"}"
-                    alt="${escapeHTML(student.nama)}"
-                    onerror="imageFallback(this, '${escapeHTML(getInitials(student.nama))}')"
-                >
-
-            </div>
-
-
-            <div class="officer-info">
-
-                <span>
-                    ${escapeHTML(student.jabatan)}
-                </span>
-
-                <h3>
-                    ${escapeHTML(student.nama)}
-                </h3>
-
-            </div>
-
-        `;
-
-
-        officers.appendChild(card);
-
-    });
-
-
-    updateStats();
-
-}
-
-
-/* =========================================
-   UPDATE STATISTICS
-   ========================================= */
-
-function updateStats() {
+// ================================
+// RENDER SISWA
+// ================================
+
+function renderStudents(
+    students = getStudents()
+) {
+
+    studentGrid.innerHTML = "";
 
     totalStudents.textContent =
         students.length;
 
 
-    const officerCount =
-        students.filter(student =>
-            student.jabatan !== "Siswa"
-        ).length;
+    if (students.length === 0) {
+
+        studentGrid.innerHTML = `
+            <div style="
+                grid-column:1/-1;
+                text-align:center;
+                padding:40px;
+                color:var(--muted);
+            ">
+                Tidak ada data siswa.
+            </div>
+        `;
+
+        return;
+    }
 
 
-    totalOfficers.textContent =
-        officerCount;
+    students.forEach(
+        (student, index) => {
 
-}
+            const card =
+                document.createElement("div");
 
-
-/* =========================================
-   DELETE
-   ========================================= */
-
-function deleteStudent(index) {
-
-    const student =
-        students[index];
+            card.className =
+                "student-card";
 
 
-    const confirmDelete =
-        confirm(
-            `Hapus ${student.nama} dari daftar siswa?`
+            card.innerHTML = `
+
+                <button
+                    class="delete-student"
+                    title="Hapus siswa"
+                    data-index="${index}"
+                >
+                    ×
+                </button>
+
+                <div class="student-photo">
+
+                    <img
+                        src="${escapeHTML(student.foto)}"
+                        alt="${escapeHTML(student.nama)}"
+                        onerror="imageFallback(this, '${escapeHTML(student.nama.charAt(0).toUpperCase())}')"
+                    >
+
+                </div>
+
+                <div class="student-info">
+
+                    <h3>
+                        ${escapeHTML(student.nama)}
+                    </h3>
+
+                    <p>
+                        ${escapeHTML(student.jabatan)}
+                    </p>
+
+                    <small>
+                        ${CLASS_NAME}
+                    </small>
+
+                </div>
+            `;
+
+
+            studentGrid.appendChild(card);
+
+        }
+    );
+
+
+    document.querySelectorAll(
+        ".delete-student"
+    ).forEach(button => {
+
+        button.addEventListener(
+            "click",
+            function() {
+
+                const index =
+                    Number(
+                        this.dataset.index
+                    );
+
+                deleteStudent(index);
+
+            }
         );
-
-
-    if (!confirmDelete) {
-        return;
-    }
-
-
-    students.splice(index, 1);
-
-    saveStudents();
-
-    renderStudents(searchStudent.value);
-
-    renderOfficers();
-
-}
-
-
-/* =========================================
-   ESCAPE HTML
-   ========================================= */
-
-function escapeHTML(value) {
-
-    const div =
-        document.createElement("div");
-
-    div.textContent =
-        value ?? "";
-
-    return div.innerHTML;
-
-}
-
-
-/* =========================================
-   ADD STUDENT
-   ========================================= */
-
-studentForm.addEventListener("submit", function(event) {
-
-    event.preventDefault();
-
-
-    const name =
-        studentName.value.trim();
-
-    const position =
-        studentPosition.value;
-
-    let photo =
-        studentPhoto.value.trim();
-
-
-    if (!name) {
-        return;
-    }
-
-
-    if (!photo) {
-
-        photo = "logo.png";
-
-    }
-
-
-    if (
-        !photo.startsWith("foto/")
-    ) {
-
-        photo =
-            "foto/" + photo;
-
-    }
-
-
-    students.push({
-
-        nama: name,
-
-        jabatan: position,
-
-        kelas: CLASS_NAME,
-
-        foto: photo
 
     });
 
+}
 
-    saveStudents();
+
+// ================================
+// HAPUS SISWA
+// ================================
+
+function deleteStudent(index) {
+
+    const students =
+        getStudents();
+
+    if (!confirm(
+        "Hapus data siswa ini?"
+    )) {
+        return;
+    }
+
+    students.splice(index, 1);
+
+    saveStudents(students);
 
     renderStudents();
 
-    renderOfficers();
+}
 
 
-    studentForm.reset();
+// ================================
+// SEARCH
+// ================================
 
-    studentModal.classList.remove("show");
+studentSearch.addEventListener(
+    "input",
+    function() {
 
-});
+        const keyword =
+            this.value.toLowerCase().trim();
 
+        const students =
+            getStudents();
 
-/* =========================================
-   MODAL
-   ========================================= */
+        const filtered =
+            students.filter(student =>
 
-addStudentBtn.addEventListener(
-    "click",
-    () => {
+                student.nama
+                    .toLowerCase()
+                    .includes(keyword)
 
-        studentModal.classList.add("show");
+                ||
+
+                student.jabatan
+                    .toLowerCase()
+                    .includes(keyword)
+
+            );
+
+        renderStudents(filtered);
 
     }
 );
 
 
-closeModal.addEventListener(
-    "click",
-    () => {
+// ================================
+// MODAL TAMBAH SISWA
+// ================================
 
-        studentModal.classList.remove("show");
+addStudentBtn.addEventListener(
+    "click",
+    function() {
+
+        studentModal.classList.remove(
+            "hidden"
+        );
+
+    }
+);
+
+
+closeStudentModal.addEventListener(
+    "click",
+    function() {
+
+        studentModal.classList.add(
+            "hidden"
+        );
 
     }
 );
@@ -537,14 +515,12 @@ closeModal.addEventListener(
 
 studentModal.addEventListener(
     "click",
-    event => {
+    function(event) {
 
-        if (
-            event.target === studentModal
-        ) {
+        if (event.target === studentModal) {
 
-            studentModal.classList.remove(
-                "show"
+            studentModal.classList.add(
+                "hidden"
             );
 
         }
@@ -553,151 +529,194 @@ studentModal.addEventListener(
 );
 
 
-/* =========================================
-   SEARCH
-   ========================================= */
+// ================================
+// TAMBAH SISWA
+// ================================
 
-searchStudent.addEventListener(
-    "input",
-    event => {
+studentForm.addEventListener(
+    "submit",
+    function(event) {
 
-        renderStudents(
-            event.target.value
+        event.preventDefault();
+
+
+        const nama =
+            document.getElementById(
+                "studentName"
+            ).value.trim();
+
+        const jabatan =
+            document.getElementById(
+                "studentPosition"
+            ).value.trim() || "Siswa";
+
+        let foto =
+            document.getElementById(
+                "studentPhoto"
+            ).value.trim();
+
+
+        if (!nama) {
+            return;
+        }
+
+
+        if (!foto) {
+
+            foto =
+                "foto/default.jpg";
+
+        } else if (
+            !foto.startsWith("foto/")
+        ) {
+
+            foto =
+                "foto/" + foto;
+
+        }
+
+
+        const students =
+            getStudents();
+
+
+        students.push({
+
+            nama: nama,
+
+            jabatan: jabatan,
+
+            kelas: CLASS_NAME,
+
+            foto: foto
+
+        });
+
+
+        saveStudents(students);
+
+        renderStudents();
+
+
+        studentForm.reset();
+
+        document.getElementById(
+            "studentPosition"
+        ).value = "Siswa";
+
+
+        studentModal.classList.add(
+            "hidden"
         );
 
     }
 );
 
 
-/* =========================================
-   DARK MODE
-   ========================================= */
+// ================================
+// ESCAPE HTML
+// ================================
 
-function updateThemeButton() {
+function escapeHTML(value) {
 
-    const isDark =
-        document.body.classList.contains("dark");
-
-
-    themeIcon.textContent =
-        isDark ? "☀" : "☾";
-
-}
-
-
-function loadTheme() {
-
-    const theme =
-        localStorage.getItem(THEME_KEY);
-
-
-    if (theme === "dark") {
-
-        document.body.classList.add("dark");
-
-    }
-
-
-    updateThemeButton();
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 
 }
 
 
-themeBtn.addEventListener(
-    "click",
-    () => {
+// ================================
+// FOTO FALLBACK
+// ================================
 
-        document.body.classList.toggle("dark");
+function imageFallback(
+    image,
+    text = "X MP 2"
+) {
 
+    image.style.display = "none";
 
-        const isDark =
-            document.body.classList.contains("dark");
+    const parent =
+        image.parentElement;
 
-
-        localStorage.setItem(
-            THEME_KEY,
-            isDark ? "dark" : "light"
-        );
-
-
-        updateThemeButton();
-
+    if (!parent) {
+        return;
     }
-);
 
+    parent.style.display =
+        "flex";
 
-/* =========================================
-   MOBILE SIDEBAR
-   ========================================= */
+    parent.style.alignItems =
+        "center";
 
-function closeSidebar() {
+    parent.style.justifyContent =
+        "center";
 
-    sidebar.classList.remove("open");
+    parent.style.color =
+        "var(--muted)";
 
-    overlay.classList.remove("show");
+    parent.style.fontWeight =
+        "bold";
+
+    parent.style.fontSize =
+        "13px";
+
+    parent.innerHTML =
+        `<span>${escapeHTML(text)}</span>`;
 
 }
 
 
-menuBtn.addEventListener(
-    "click",
-    () => {
+// ================================
+// INIT
+// ================================
 
-        sidebar.classList.add("open");
+loadTheme();
 
-        overlay.classList.add("show");
+loadVisitorName();
 
-    }
-);
-
-
-overlay.addEventListener(
-    "click",
-    closeSidebar
-);
+renderStudents();
 
 
-document
-    .querySelectorAll(".nav-link")
-    .forEach(link => {
-
-        link.addEventListener(
-            "click",
-            closeSidebar
-        );
-
-    });
-
-
-/* =========================================
-   ACTIVE NAVIGATION
-   ========================================= */
+// ================================
+// ACTIVE NAV
+// ================================
 
 const sections =
-    document.querySelectorAll("section[id]");
+    document.querySelectorAll(
+        "section[id]"
+    );
 
 const navLinks =
-    document.querySelectorAll(".nav-link");
+    document.querySelectorAll(
+        ".nav-link"
+    );
 
 
 window.addEventListener(
     "scroll",
-    () => {
+    function() {
 
         let current = "";
-
 
         sections.forEach(section => {
 
             const sectionTop =
-                section.offsetTop - 150;
+                section.offsetTop - 130;
 
             if (
-                window.scrollY >= sectionTop
+                window.scrollY >=
+                sectionTop
             ) {
 
                 current =
-                    section.getAttribute("id");
+                    section.getAttribute(
+                        "id"
+                    );
 
             }
 
@@ -706,15 +725,18 @@ window.addEventListener(
 
         navLinks.forEach(link => {
 
-            link.classList.remove("active");
-
+            link.classList.remove(
+                "active"
+            );
 
             if (
                 link.getAttribute("href") ===
-                `#${current}`
+                "#" + current
             ) {
 
-                link.classList.add("active");
+                link.classList.add(
+                    "active"
+                );
 
             }
 
@@ -722,85 +744,3 @@ window.addEventListener(
 
     }
 );
-
-
-/* =========================================
-   INSTAGRAM
-   ========================================= */
-
-document.getElementById(
-    "instagramName"
-).textContent =
-    INSTAGRAM_USERNAME;
-
-
-document.getElementById(
-    "infoInstagram"
-).textContent =
-    INSTAGRAM_USERNAME;
-
-
-document.getElementById(
-    "instagramLink"
-).href =
-    INSTAGRAM_URL;
-
-
-/* =========================================
-   IMAGE PLACEHOLDER STYLE
-   ========================================= */
-
-const placeholderStyle =
-    document.createElement("style");
-
-placeholderStyle.textContent = `
-
-    .image-placeholder {
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
-        background:
-            linear-gradient(
-                135deg,
-                #181b20,
-                #30343b
-            );
-    }
-
-    .fallback-text {
-        color: white;
-        font-size: 22px;
-        font-weight: 800;
-        letter-spacing: 1px;
-        text-align: center;
-    }
-
-    .empty-state {
-        grid-column: 1 / -1;
-        padding: 40px;
-        text-align: center;
-        border: 1px dashed var(--border);
-        border-radius: 18px;
-        color: var(--muted);
-        background: var(--card);
-        font-size: 12px;
-    }
-
-`;
-
-document.head.appendChild(
-    placeholderStyle
-);
-
-
-/* =========================================
-   START
-   ========================================= */
-
-loadTheme();
-
-renderStudents();
-
-renderOfficers();
-
-updateStats();
